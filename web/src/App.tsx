@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import type { ChronicleCard, GameSave, Rarity, SummonResult, Tab } from "./types";
 import { CARDS, CFG, RARITIES, rarityIndex, rarityOf } from "./data/cards";
 import { collectionStats, defaultSave, loadSave, parseSave, persistSave, summonCards } from "./game/summon";
+import CardArtwork from "./components/CardArtwork";
 import "./App.css";
 
 type CardStyle = CSSProperties & { "--rarity"?: string; "--order"?: number };
@@ -24,8 +25,8 @@ function CardTile({ card, count, locked = false, first = false, delay = 0, anima
         <div className="card-head"><span>미발견</span><span>✦</span></div>
         <div className="card-illustration card-hidden">?</div>
         <div className="card-title">???</div>
-        <div className="card-type">아직 밝혀지지 않은 이야기</div>
-        <span className="card-id">UNDISCOVERED</span>
+        <div className="card-type">새로운 기록을 발견해 보세요</div>
+        <span className="card-id">아직 만나지 못한 카드</span>
       </div>
     );
   }
@@ -37,17 +38,13 @@ function CardTile({ card, count, locked = false, first = false, delay = 0, anima
         <span className="card-cost">💧 {card.cost}</span>
       </div>
       {first && <span className="new-label">NEW</span>}
-      <div className="card-illustration">
-        <span className="card-symbol" aria-hidden="true">{card.type === "마법" ? "✦" : "♜"}</span>
-        <span className="card-crest" aria-hidden="true">{rarityIcon[card.rarity]}</span>
-        <span className="crest-border" />
-      </div>
+      <div className="card-illustration"><CardArtwork card={card} /></div>
       <div className="card-title">{card.name}</div>
-      <div className="card-type">{card.type} <span>· {card.id}</span></div>
+      <div className="card-type"><span className="card-type-label">{card.type}</span> <span>NO. {card.id}</span></div>
       <p className="card-description">{card.text}</p>
       <div className="card-bottom">
-        <span>{card.type === "유닛" ? `⚔ ${card.atk ?? 0}　♥ ${card.hp ?? 0}` : "✧ MAGIC"}</span>
-        {count && count > 1 && <span className="copy-count">×{count}</span>}
+        <span className="card-stats">{card.type === "유닛" ? `⚔ ${card.atk ?? 0}　♥ ${card.hp ?? 0}` : "✧ 마법 카드"}</span>
+        {count && count > 1 && <span className="copy-count">×{count} 보유</span>}
       </div>
       {card.temp && <span className="temp-flag">임시 카드</span>}
     </button>
@@ -88,6 +85,7 @@ function App() {
   const [filter, setFilter] = useState<Filter>("전체");
   const [search, setSearch] = useState("");
   const [ownedOnly, setOwnedOnly] = useState(false);
+  const [sort, setSort] = useState<"owned" | "rarity" | "copies">("owned");
   const [importText, setImportText] = useState("");
   const [importStatus, setImportStatus] = useState("");
   const [resetOpen, setResetOpen] = useState(false);
@@ -113,14 +111,23 @@ function App() {
       : outcome.results.some(x => x.first) ? "새로운 카드가 도감에 등록되었습니다!" : "소환 완료!");
   };
 
-  const sorted = [...CARDS].sort((a,b) => rarityIndex(b.rarity) - rarityIndex(a.rarity));
+  const ownedCount = (card: ChronicleCard) => game.own[card.id] ?? 0;
+  const sorted = [...CARDS].sort((a,b) => {
+    const diff = sort === "owned"
+      ? Number(ownedCount(b) > 0) - Number(ownedCount(a) > 0)
+      : sort === "copies" ? ownedCount(b) - ownedCount(a) : 0;
+    return diff || rarityIndex(b.rarity) - rarityIndex(a.rarity) || a.id.localeCompare(b.id);
+  });
   const visible = sorted.filter(card =>
     (filter === "전체" || filter === card.rarity) &&
-    (!ownedOnly || (game.own[card.id] ?? 0) > 0) &&
-    ((game.own[card.id] ?? 0) === 0
-      ? search.trim() === "" // hidden cards must not be revealed via text search
-      : (card.name + " " + card.id + " " + card.type).toLowerCase().includes(search.trim().toLowerCase()))
+    (!ownedOnly || ownedCount(card) > 0) &&
+    (search.trim() === "" || (
+      ownedCount(card) > 0 &&
+      (card.name + " " + card.id + " " + card.type).toLowerCase().includes(search.trim().toLowerCase())
+    ))
   );
+  const collectionRate = Math.round(stats.owned / stats.total * 100);
+  const remaining = stats.total - stats.owned;
 
   const copySave = async () => {
     try {
@@ -224,27 +231,62 @@ function App() {
         ) : (
           <section role="tabpanel">
             <div className="collection-summary">
-              <div><span className="eyebrow">YOUR CHRONICLE</span><h2>영웅 도감</h2><p>수집한 카드의 기록을 확인하고 숨겨진 카드를 찾아보세요.</p></div>
+              <div className="collection-intro">
+                <span className="eyebrow">THE HERO ARCHIVE</span>
+                <h2>영웅 도감 <span className="collection-percentage">{collectionRate}% 달성</span></h2>
+                <p>당신이 만난 영웅과 마법의 기록. 카드를 누르면 상세 정보를 볼 수 있어요.</p>
+              </div>
               <div className="collection-stats">
                 <span><strong>{stats.owned}<small> / {stats.total}</small></strong>수집 카드</span>
-                <span><strong>{game.pulls.toLocaleString()}</strong>총 소환</span>
+                <span><strong>{game.pulls.toLocaleString()}</strong>누적 소환</span>
                 <span><strong>{stats.duplicates.toLocaleString()}</strong>중복 카드</span>
               </div>
             </div>
-            <div className="collection-progress" aria-label={`도감 진행도 ${Math.floor(stats.owned / stats.total * 100)}%`}>
+            <div className="collection-progress-row">
+              <span>📜 도감 완성도</span>
+              <span>{remaining === 0 ? "모든 카드를 수집했어요!" : `남은 카드 ${remaining}장`}</span>
+            </div>
+            <div className="collection-progress" role="progressbar" aria-valuenow={stats.owned} aria-valuemin={0}
+              aria-valuemax={stats.total} aria-label="도감 수집 진행도">
               <span style={{ width: `${stats.owned / stats.total * 100}%` }} />
             </div>
-            <div className="collection-tools">
-              <input type="search" placeholder="발견한 카드 이름 또는 ID 검색" aria-label="카드 검색"
-                value={search} onChange={e => setSearch(e.target.value)} />
-              <select aria-label="등급 선택" value={filter} onChange={e => setFilter(e.target.value as Filter)}>
-                <option value="전체">전체 등급</option>
-                {RARITIES.map(r => <option key={r.name} value={r.name}>{r.name}</option>)}
-              </select>
-              <label className="owned-toggle"><input type="checkbox" checked={ownedOnly}
-                onChange={e => setOwnedOnly(e.target.checked)} /> 발견한 카드만</label>
+            <div className="archive-toolbar">
+              <div className="rarity-chips" role="group" aria-label="카드 등급별 필터">
+                <button type="button" aria-pressed={filter === "전체"} className={filter === "전체" ? "active" : ""}
+                  onClick={() => setFilter("전체")}>전체 <small>{stats.owned}/{stats.total}</small></button>
+                {RARITIES.filter(r => r.rate > 0).map(r => {
+                  const available = CARDS.filter(card => card.rarity === r.name).length;
+                  const acquired = CARDS.filter(card => card.rarity === r.name && ownedCount(card) > 0).length;
+                  return <button type="button" key={r.name} aria-pressed={filter === r.name}
+                    className={filter === r.name ? "active" : ""}
+                    style={{ "--chip": r.color } as CSSProperties} onClick={() => setFilter(r.name)}>
+                    <span>{rarityIcon[r.name]} {r.name}</span><small>{acquired}/{available}</small>
+                  </button>;
+                })}
+              </div>
+              <div className="collection-tools">
+                <div className="search-wrap">
+                  <span aria-hidden="true">⌕</span>
+                  <input type="search" placeholder="보유한 카드 검색" aria-label="보유한 카드 이름 또는 ID 검색"
+                    value={search} onChange={e => setSearch(e.target.value)} />
+                  {search && <button type="button" aria-label="검색어 지우기"
+                    onClick={() => setSearch("")}>✕</button>}
+                </div>
+                <select aria-label="카드 정렬 방식" value={sort}
+                  onChange={e => setSort(e.target.value as "owned" | "rarity" | "copies")}>
+                  <option value="owned">보유 카드 우선</option>
+                  <option value="rarity">희귀도 높은 순</option>
+                  <option value="copies">보유 수량 순</option>
+                </select>
+                <label className="owned-toggle"><input type="checkbox" checked={ownedOnly}
+                  onChange={e => setOwnedOnly(e.target.checked)} /> 보유 카드만</label>
+              </div>
+              <div className="archive-result-row">
+                <span><strong>{visible.length}장</strong> 표시 중</span>
+                <span>✨ 카드 전체를 눌러 상세 정보 확인</span>
+              </div>
             </div>
-            <div className="cards-grid">
+            <div className="cards-grid archive-grid">
               {visible.map((card, index) => {
                 const count = game.own[card.id] ?? 0;
                 return count > 0
@@ -252,7 +294,14 @@ function App() {
                   : <CardTile key={card.id} card={card} locked />;
               })}
             </div>
-            {visible.length === 0 && <div className="empty-result">조건에 맞는 카드가 없습니다.</div>}
+            {visible.length === 0 && <div className="empty-result archive-empty">
+              <div className="empty-icon">⌕</div>
+              <strong>조건에 맞는 카드가 없어요.</strong>
+              <p>검색어 또는 등급 필터를 변경해 보세요.</p>
+              <button className="secondary-action" onClick={() => { setSearch(""); setFilter("전체"); setOwnedOnly(false); }}>
+                필터 초기화
+              </button>
+            </div>}
           </section>
         )}
 
