@@ -1,0 +1,370 @@
+:root {
+  --bg: #0d0b14;
+  --surface: #1b1727;
+  --surface-2: #251d31;
+  --line: #4b3a59;
+  --text: #ece7f6;
+  --muted: #a69aae;
+  --gold: #f0c578;
+}
+.app { min-height: 100vh; background:
+  radial-gradient(ellipse at 50% -5%, #492c6775 0%, transparent 52%),
+  radial-gradient(ellipse at 90% 72%, #241a4b66 0%, transparent 38%),
+  #0d0b14;
+}
+.topbar { border-bottom: 1px solid #4b3a57; background: #17111fcf; backdrop-filter: blur(12px); }
+.topbar-inner {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  width: min(1280px, calc(100% - 40px)); margin: auto; padding: 19px 0;
+}
+.brand { display: flex; align-items: center; gap: 14px; }
+.brand-emblem { width: 58px; height: 64px; display: grid; place-items: center; flex-shrink: 0; background: linear-gradient(150deg, #7154a5, #262034); border: 1px solid #b7a0d3; border-radius: 13px; color: #e8d3ff; font-size: 30px; box-shadow: 0 0 25px #b185ef30; }
+.eyebrow { color: #b8a1db; font-weight: 800; letter-spacing: 1.5px; font-size: 10px; }
+.brand h1 { font-family: "Noto Serif KR", serif; font-size: clamp(21px, 2.5vw, 30px); font-weight: 800; color: #f3d397; margin: 5px 0 0; letter-spacing: .6px; }
+.brand h1 span { color: #f0e5fc; }
+.version { margin-top: 4px; font-size: 10px; color: #968aa8; letter-spacing: 1.2px; }
+.gem-balance { display: flex; align-items: center; flex-shrink: 0; gap: 12px; padding: 12px 16px; background: #2d233a; border: 1px solid #725a8e; border-radius: 12px; box-shadow: 0 4px 30px #0003; }
+.gem-spark { font-size: 30px; }
+.gem-balance small { display: block; color: #b3a6c1; font-size: 11px; margin-bottom: 2px; }
+.gem-balance strong { color: #ffdb9c; font-size: 19px; }
+.gem-balance em { color: #ae98d9; font-style: normal; font-size: 10px; letter-spacing: 1.5px; }
+.main-shell { width: min(1160px, calc(100% - 40px)); margin: auto; padding: 22px 0 30px; }
+.menu-tabs { display: flex; gap: 8px; border-bottom: 1px solid #4d385b; margin-bottom: 25px; }
+.menu-tabs button {
+  display: flex; align-items: center; gap: 8px;
+  background: transparent; border: none; border-bottom: 3px solid transparent;
+  color: #b6a3c4; padding: 13px 22px; font-weight: 800; font-size: 14px;
+}
+.menu-tabs button.selected { color: #f8d995; border-bottom-color: #edc27e; background: linear-gradient(0deg,#e7b17b11,transparent); }
+.menu-tabs button:hover { color: white; }
+.tab-counter { background: #473754; border-radius: 16px; padding: 3px 7px; font-size: 11px; }
+.summon-hero { display: grid; grid-template-columns: 1.35fr .65fr; min-height: 252px; overflow: hidden; position: relative; border: 1px solid #75517c; border-radius: 15px;
+  background: radial-gradient(circle at 85% 50%, #67437590, transparent 34%),linear-gradient(120deg,#32203e,#231b2f 80%);
+}
+.summon-hero::before, .summon-hero::after { content: "✧"; position: absolute; font-size: 20px; color: #cba2ff4f; top: 30px; right: 12%; }
+.summon-hero::after { top: auto; bottom: 34px; right: 32%; font-size: 36px; }
+.summon-hero-left { position: relative; z-index: 2; padding: 26px 30px; }
+.summon-hero h2 { font-family: "Noto Serif KR", serif; font-size: clamp(19px,2.4vw,26px); color: #ffe0aa; margin: 11px 0 9px; }
+.summon-hero p { color: #c4b4ce; font-size: 12px; line-height: 1.7; margin: 0 0 20px; }
+.summon-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.summon-button { flex: 1 1 165px; max-width: 250px; min-width: 145px; border-radius: 9px; display: flex; flex-direction: column; align-items: flex-start; gap: 7px; padding: 13px 17px; color: #faeed5; text-align: left; font-weight: 800; border: 1px solid #8b689f; background: #48315f; }
+.summon-button:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.12); }
+.summon-button.primary { background: linear-gradient(140deg, #ba8250, #8b4b5c); border-color: #edb576; color: #fff1d7; }
+.summon-button span { font-size: 13px; }
+.summon-button strong { font-size: 17px; }
+.summon-button b { background: #ffdfa9; color: #593942; border-radius: 4px; padding: 2px 5px; font-size: 9px; margin-left: 3px; }
+.summon-hero .summon-guarantee { color: #e6c895; font-size: 11px; margin: 15px 0 0; }
+.summon-orb { display: grid; place-items: center; z-index: 1; }
+.orb-rings { width: 185px; height: 185px; display: grid; place-items: center; border-radius: 50%; border: 2px solid #b593e27a;
+  background: radial-gradient(circle at 50% 38%,#fff4cd,#e8c6f7 7%,#9a6cc9 28%,#3d2f75 55%,#17112b 75%);
+  box-shadow: 0 0 18px #c58feeaa, 0 0 75px #925cb699, inset 0 0 30px #d3b5ee;
+  animation: orb-float 4s ease-in-out infinite alternate;
+}
+.orb-rings span { font-size: 79px; color: #fff5d6; text-shadow: 0 0 40px white; }
+.section-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; margin: 31px 0 16px; }
+.section-heading h2, .collection-summary h2 { font-family: "Noto Serif KR",serif; color: #f3d7a6; margin: 5px 0 0; font-size: 23px; }
+.results-count { font-size: 12px; color: #b9a7c4; }
+.message { padding: 12px 16px; margin-bottom: 13px; border-radius: 9px; border: 1px solid #735d83; background: #382844; color: #efd4a7; font-size: 13px; }
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(158px,1fr)); gap: 14px; }
+.chronicle-card {
+  --rarity: #aab3c4;
+  appearance: none; position: relative; min-width: 0; display: flex; flex-direction: column; align-items: stretch; text-align: left;
+  min-height: 246px; padding: 11px; border: 1px solid var(--rarity); border-radius: 12px; color: #f4eff8;
+  background: linear-gradient(150deg,#30263e,#16111e 80%);
+  box-shadow: inset 0 0 18px #ffffff04,0 0 14px -7px var(--rarity);
+  transition: transform .16s,border-color .16s,box-shadow .16s; overflow: visible;
+}
+button.chronicle-card:hover { transform: translateY(-5px); box-shadow: 0 0 23px -2px var(--rarity), 0 10px 22px #0005; }
+.chronicle-card.high-tier { border-width: 2px; box-shadow: inset 0 0 24px #ffffff06, 0 0 17px -3px var(--rarity); }
+.card-head { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--rarity); font-weight: 850; gap: 6px; }
+.card-cost { font-size: 12px; color: #8bc2ff; white-space: nowrap; }
+.new-label { position: absolute; z-index: 2; right: -5px; top: 22px; padding: 3px 7px; border-radius: 4px; color: #372011; background: #f0c879; font-size: 10px; font-weight: 900; transform: rotate(7deg); }
+.card-illustration { display: flex; align-items: center; justify-content: center; position: relative; margin: 9px 0; min-height: 76px; border: 1px solid #7c6b9c36; border-radius: 7px; overflow: hidden;
+  background: radial-gradient(circle, color-mix(in srgb, var(--rarity) 29%, transparent), #1b1527 64%);
+}
+.card-symbol { font-family: Georgia,serif; color: var(--rarity); text-shadow: 0 0 19px var(--rarity); font-size: 43px; z-index: 1; }
+.card-crest { position: absolute; color: #ffffff65; font-size: 80px; opacity: .12; }
+.crest-border { position: absolute; inset: 9px; border: 1px solid #ffffff18; border-radius: 50%; transform: scaleX(.6); }
+.card-title { color: #f6eacb; font-weight: 850; font-size: 13px; line-height: 1.35; min-height: 33px; }
+.card-type { font-size: 10px; color: #b3a5c7; margin: 0 0 7px; }
+.card-type span { opacity: .58; }
+.card-description { flex: 1; margin: 0 0 10px; color: #cdc1d8; font-size: 11px; line-height: 1.5; }
+.card-bottom { display: flex; justify-content: space-between; align-items: center; font-weight: 800; color: #eed18a; font-size: 11px; gap: 6px; min-height: 17px; }
+.copy-count { color: #f5e7d8; background: #0b0912ad; border: 1px solid #5d506b; padding: 3px 7px; border-radius: 20px; }
+.temp-flag { position: absolute; bottom: -8px; left: 12px; padding: 2px 6px; border-radius: 4px; background: #342b3b; color: #aba0b4; border: 1px solid #55485f; font-size: 9px; }
+.chronicle-card.locked { cursor: default; filter: grayscale(1); opacity: .46; background: #0d0b13; border-color: #524d5b; box-shadow: none; }
+.chronicle-card.locked .card-hidden { font-size: 50px; font-weight: 900; color: #827a8a; }
+.chronicle-card.locked .card-title { color: #aaa1b1; }
+.card-id { color: #625a6a; margin-top: auto; font-size: 10px; }
+.chronicle-card.reveal { animation: summon-pop .54s cubic-bezier(.24,.8,.25,1) both; animation-delay: calc(var(--order) * 75ms); }
+.high-tier.reveal { animation-name: summon-pop, legendary-glow; animation-duration: .54s, 2s; animation-delay: calc(var(--order) * 75ms), calc(var(--order) * 75ms + .54s); animation-iteration-count: 1, infinite; }
+.empty-result { display: grid; place-items: center; text-align: center; gap: 9px; min-height: 205px; border-radius: 13px; border: 1px dashed #5f4a72; color: #cabbd5; background: #1c1625a9; padding: 20px; }
+.empty-result strong { font-size: 15px; }
+.empty-result p { margin: 0; color: #a396b0; font-size: 12px; }
+.empty-icon { display: grid; place-items: center; width: 70px; height: 70px; border-radius: 50%; border: 1px solid #82649b; box-shadow: 0 0 22px #8753c866; font-size: 39px; color: #e1c4ff; }
+.rates-panel { margin-top: 30px; border: 1px solid #44394f; border-radius: 12px; background: #1b1723; overflow: hidden; }
+.rates-panel summary { display: flex; justify-content: space-between; gap: 12px; cursor: pointer; padding: 17px 18px; color: #ddc6e8; font-size: 13px; font-weight: 700; }
+.rates-panel summary span { color: #b5a4be; font-size: 11px; }
+.rates-panel summary::-webkit-details-marker { display: none; }
+.rates-inner { padding: 0 18px 18px; }
+.rates-inner table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
+.rates-inner th, .rates-inner td { border-bottom: 1px solid #44364f; padding: 10px 8px; }
+.rates-inner th { color: #a995b7; }
+.rates-inner p { color: #ad9bad; font-size: 11px; line-height: 1.7; }
+.collection-summary { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin: 0 0 18px; }
+.collection-summary p { font-size: 12px; color: #a99eb6; }
+.collection-stats { display: flex; gap: 9px; flex-wrap: wrap; }
+.collection-stats > span { display: flex; flex-direction: column; text-align: center; gap: 5px; min-width: 90px; background: #282033; border: 1px solid #55435c; border-radius: 9px; padding: 12px; color: #ad9fbd; font-size: 11px; }
+.collection-stats strong { font-size: 19px; color: #ecd4a0; }
+.collection-stats small { font-size: 11px; color: #aaa0b3; }
+.collection-progress { height: 7px; width: 100%; background: #2b2238; border-radius: 100px; overflow: hidden; margin: 0 0 20px; }
+.collection-progress span { display: block; height: 100%; border-radius: 100px; background: linear-gradient(90deg,#705da8,#f2d28a); }
+.collection-tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
+.collection-tools input[type=search] { flex: 1; min-width: 200px; }
+.collection-tools input[type=search], .collection-tools select, .data-body textarea { padding: 12px; border: 1px solid #62516d; background: #181320; border-radius: 9px; color: #eadff0; }
+.collection-tools select { min-width: 125px; }
+.owned-toggle { display: flex; align-items: center; gap: 7px; font-size: 12px; color: #cabbcf; white-space: nowrap; }
+.owned-toggle input { accent-color: #d4ae77; }
+.data-manager { margin-top: 36px; border: 1px solid #44374f; border-radius: 11px; background: #181421; overflow: hidden; }
+.data-manager > summary { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; padding: 17px; cursor: pointer; font-size: 13px; color: #d5c1dc; font-weight: 700; }
+.data-manager > summary span { font-size: 11px; color: #9e8da7; font-weight: 400; }
+.data-body { border-top: 1px solid #45374e; padding: 14px 18px 20px; }
+.data-body p { color: #b9acbf; font-size: 12px; line-height: 1.8; }
+.data-body strong { color: #f0d7b8; }
+.data-body code { color: #e9c291; font-size: 12px; }
+.transfer-guide { border: 1px solid #554663; border-radius: 8px; background: #211a2d; padding: 15px; margin: 15px 0; }
+.transfer-guide strong { font-size: 13px; }
+.transfer-guide p { margin: 6px 0; }
+.transfer-guide pre { white-space: pre-wrap; overflow-wrap: anywhere; background: #100d17; color: #f0c87d; border-radius: 7px; padding: 12px; font-size: 12px; }
+.data-body textarea { display: block; width: 100%; resize: vertical; }
+.data-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.secondary-action, .danger-action { border: 1px solid #7e6488; background: #352942; color: #e4d1ec; padding: 10px 13px; font-size: 12px; border-radius: 8px; font-weight: 700; }
+.danger-action { color: #ffb4ba; border-color: #874d63; background: #39232f; }
+.secondary-action:hover:not(:disabled), .danger-action:hover:not(:disabled) { filter: brightness(1.16); }
+.import-status { color: #f0d391 !important; }
+.muted { opacity: .7; }
+footer { margin-top: 27px; color: #74687e; font-size: 10px; text-align: center; letter-spacing: 1px; padding-bottom: 20px; }
+.modal-backdrop { position: fixed; inset: 0; z-index: 80; display: flex; justify-content: center; align-items: center; padding: 16px; background: #050409d9; backdrop-filter: blur(7px); }
+.modal-content { padding: 16px; border: 1px solid #77608c; background: #251e30; border-radius: 14px; width: min(338px,100%); box-shadow: 0 26px 80px #000b; }
+.modal-top { display: flex; align-items: center; justify-content: space-between; color: #d9cae6; margin-bottom: 12px; font-size: 13px; font-weight: 800; }
+.modal-top button { border-radius: 8px; border: 1px solid #625371; background: #382b45; color: #f6effa; width: 30px; height: 30px; }
+.modal-content .chronicle-card { width: 100%; min-height: 340px; padding: 18px; cursor: default; }
+.modal-content .card-illustration { min-height: 126px; }
+.modal-content .card-symbol { font-size: 76px; }
+.modal-content .card-title { font-size: 18px; }
+.modal-content .card-description { font-size: 13px; }
+.modal-bottom { display: grid; gap: 7px; color: #ac9eb6; padding-top: 15px; font-size: 11px; }
+.modal-bottom strong { color: #eee0bd; }
+@keyframes summon-pop { from { transform: rotateY(80deg) scale(.84) translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes legendary-glow { 50% { box-shadow: 0 0 28px 2px var(--rarity); } }
+@keyframes orb-float { from { transform: translateY(8px) rotate(-8deg); } to { transform: translateY(-10px) rotate(8deg); } }
+@media (max-width: 740px) {
+  .topbar-inner { width: calc(100% - 24px); padding: 14px 0; }
+  .brand-emblem { width: 43px; height: 49px; font-size: 24px; }
+  .brand { gap: 8px; }
+  .brand h1 { font-size: 17px; }
+  .brand .eyebrow { font-size: 8px; letter-spacing: 1px; }
+  .version { font-size: 8px; }
+  .gem-balance { padding: 8px; gap: 5px; }
+  .gem-spark { font-size: 20px; }
+  .gem-balance strong { font-size: 13px; }
+  .gem-balance small { font-size: 9px; }
+  .gem-balance em { display: none; }
+  .main-shell { width: calc(100% - 24px); padding-top: 12px; }
+  .menu-tabs { margin-bottom: 14px; }
+  .menu-tabs button { padding: 11px 15px; font-size: 12px; }
+  .summon-hero { grid-template-columns: 1fr; }
+  .summon-hero-left { padding: 22px 17px; }
+  .summon-hero h2 { font-size: 21px; }
+  .summon-orb { display: none; }
+  .summon-button { max-width: none; min-width: 120px; }
+  .cards-grid { grid-template-columns: repeat(auto-fill,minmax(143px,1fr)); gap: 10px; }
+  .chronicle-card { min-height: 232px; }
+  .collection-summary { align-items: stretch; flex-direction: column; gap: 8px; }
+  .collection-stats { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .collection-stats > span { min-width: 0; padding: 10px 4px; }
+  .collection-tools input[type=search] { flex-basis: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,*::before,*::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+
+/* =================================================================
+   V0.2.1 — CODEX UX PASS
+   Higher legibility, 4-column collection, real distinct heraldic art,
+   rarity quick-filters, owned-first discovery and responsive controls.
+   ================================================================= */
+.main-shell { width: min(1200px, calc(100% - 42px)); }
+.menu-tabs { margin-bottom: 20px; }
+.menu-tabs button { min-height: 49px; padding: 12px 22px; font-size: 14px; }
+
+.collection-summary { margin: 0 0 18px; padding: 21px 24px; gap: 22px;
+  align-items: center; background: linear-gradient(105deg,#2c203a,#1c1829);
+  border: 1px solid #554363; border-radius: 14px; }
+.collection-intro h2 { margin: 8px 0 9px; font-size: clamp(23px,2.2vw,28px); }
+.collection-intro p { margin: 0; line-height: 1.7; font-size: 13px; }
+.collection-percentage {
+  display: inline-flex; align-items: center; vertical-align: middle;
+  border: 1px solid #94705c; border-radius: 99px;
+  padding: 5px 10px; margin-left: 10px;
+  color: #f5d597; background: #60423560;
+  font-family: "Noto Sans KR", sans-serif; font-size: 12px; font-weight: 800; }
+.collection-stats { flex-shrink: 0; gap: 9px; }
+.collection-stats > span { min-width: 91px; padding: 12px 13px; border-color: #65516f; background: #33263e; }
+.collection-stats strong { font-size: 21px; }
+.collection-progress-row { display: flex; justify-content: space-between; gap: 12px; align-items: center;
+  margin: 17px 2px 9px; font-size: 12px; color: #d3c3df; font-weight: 750; }
+.collection-progress-row span:last-child { color: #e2bb80; }
+.collection-progress { height: 8px; margin: 0 0 18px; background: #31253b; }
+.collection-progress span { box-shadow: 0 0 12px #ccaf8099; }
+
+.archive-toolbar { margin-bottom: 18px; border: 1px solid #4d3e5a; background: #1c1727; border-radius: 12px; overflow: hidden; }
+.rarity-chips { display: flex; flex-wrap: wrap; align-items: center; padding: 12px 13px 7px; gap: 7px; }
+.rarity-chips button {
+  --chip: #e7d2b6; display: inline-flex; align-items: center; justify-content: space-between; gap: 11px;
+  padding: 9px 12px; border: 1px solid #5c4b67; background: #30253d; border-radius: 9px;
+  font-size: 12px; font-weight: 800; color: #c9bad0; white-space: nowrap;
+  transition: background .15s, border-color .15s, color .15s, transform .15s; }
+.rarity-chips button small { font-size: 10px; font-weight: 650; color: #aa99b7; }
+.rarity-chips button:first-child { background: #403047; color: #e8d8ee; }
+.rarity-chips button:hover, .rarity-chips button.active {
+  border-color: var(--chip); background: color-mix(in srgb,var(--chip) 17%,#261c31);
+  color: var(--chip); }
+.rarity-chips button.active { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--chip) 28%,transparent); }
+.rarity-chips button.active small { color: #eee3ec; }
+.collection-tools { padding: 10px 13px 12px; margin: 0; gap: 9px; border-bottom: 1px solid #4b3b59; }
+.search-wrap { display: flex; flex: 1 1 300px; align-items: center; gap: 4px;
+  min-width: 0; border: 1px solid #6c5879; background: #15101f; border-radius: 9px;
+  transition: border-color .2s; }
+.search-wrap:focus-within { border-color: #e3bd8c; }
+.search-wrap > span { display: grid; place-items: center; width: 30px; margin-left: 6px; color: #c5aecb; font-size: 23px; }
+.search-wrap input[type="search"] { border: none; width: 100%; min-width: 0; height: 41px; flex: 1; font-size: 13px; background: transparent; color: #eee0ee; padding: 8px 7px; outline: none; }
+.search-wrap input[type="search"]:focus-visible { outline: none; }
+.search-wrap button { border: none; background: transparent; color: #c8b7ce; padding: 9px 10px; }
+.collection-tools select { min-width: 155px; font-size: 12px; padding: 11px 12px; background: #2c2238; border-color: #645272; }
+.owned-toggle { font-size: 12px; font-weight: 650; }
+.owned-toggle input { width: 16px; height: 16px; }
+.archive-result-row { display: flex; justify-content: space-between; gap: 14px; align-items: center; padding: 9px 15px;
+  font-size: 11px; color: #a99bb5; }
+.archive-result-row strong { color: #f1d6a8; font-size: 12px; }
+.archive-empty { margin-top: 10px; padding: 25px; }
+.archive-empty button { margin-top: 5px; }
+
+.cards-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.chronicle-card { min-height: 307px; padding: 14px 15px; gap: 0; overflow: visible;
+  border-radius: 13px; border-width: 1px; background: linear-gradient(155deg,#31263e 0%,#1a1424 78%);
+  box-shadow: inset 0 1px 0 #ffffff0c, 0 9px 24px #07040c60;
+}
+.chronicle-card.high-tier { border-width: 2px; }
+.card-head { font-size: 12px; margin-bottom: 8px; }
+.card-cost { background: #1421338c; border: 1px solid #58769b55; padding: 4px 7px; border-radius: 6px;
+  font-size: 12px; font-weight: 800; }
+.card-illustration {
+  position: relative; flex-shrink: 0; display: block;
+  margin: 0 0 14px; height: 118px; min-height: 118px;
+  border-radius: 9px; border: 1px solid color-mix(in srgb,var(--rarity) 32%, #40344d);
+  background:
+    radial-gradient(circle at 51% 45%,color-mix(in srgb,var(--rarity) 30%,transparent),transparent 64%),
+    linear-gradient(155deg,#30293d,#17121f);
+}
+.artwork { width: 100%; height: 100%; display: grid; place-items: center; position: relative;
+  isolation: isolate; overflow: hidden; border-radius: 8px; color: var(--rarity); }
+.artwork::before {
+  content: ""; position: absolute; width: 180px; height: 180px;
+  top: -90px; right: -95px; border-radius: 50%;
+  border: 1px solid color-mix(in srgb,var(--rarity) 24%,transparent); }
+.artwork::after {
+  content: ""; position: absolute; inset: 8px;
+  border: 1px solid #ffffff12; border-radius: 6px; pointer-events: none; }
+.artwork-halo { width: 126px; height: 126px; border-radius: 50%;
+  position: absolute; background: radial-gradient(circle,color-mix(in srgb,var(--rarity) 28%,transparent),transparent 70%);
+  filter: blur(3px); opacity: .9; }
+.artwork-ornament, .artwork-motif { display: block; position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%,-50%); }
+.artwork-ornament { width: 114px; height: 114px; opacity: .63; }
+.artwork-motif {
+  width: 79px; height: 79px;
+  filter: drop-shadow(0 0 11px color-mix(in srgb,var(--rarity) 68%,transparent)) drop-shadow(0 2px 2px #090710);
+}
+.artwork-glitter { position: absolute; font-size: 17px; opacity: .52; }
+.glitter-one { top: 10px; left: 20px; }
+.glitter-two { right: 18px; bottom: 9px; }
+.card-title {
+  font-family: "Noto Serif KR", "Malgun Gothic", serif; font-size: 15px;
+  color: #ffebc8; line-height: 1.45; min-height: 39px; margin-bottom: 5px; font-weight: 800;
+}
+.card-type { display: flex; align-items: center; flex-wrap: wrap; gap: 5px;
+  font-size: 11px; margin-bottom: 10px; }
+.card-type-label { display: inline-flex; align-items: center;
+  border-radius: 5px; padding: 3px 7px; background: #4a3556; color: #e5cbf0; font-weight: 700; }
+.card-type > span:not(.card-type-label) { color: #aaa1b7; opacity: .85; }
+.card-description { color: #ded1e5; font-size: 12px; line-height: 1.6; margin: 0 0 12px; }
+.card-bottom { margin-top: auto; padding-top: 9px; border-top: 1px solid #69577573;
+  font-size: 12px; min-height: 30px; }
+.card-stats { color: #f4d495; font-weight: 850; }
+.copy-count { font-size: 10px; border-color: #7d678a; padding: 4px 7px; white-space: nowrap; }
+.temp-flag { font-size: 9px; bottom: -9px; }
+.chronicle-card.locked { border: 1px dashed #514958; filter: none; opacity: .63;
+  background: #121018; box-shadow: none; }
+.chronicle-card.locked .card-illustration {
+  background: radial-gradient(circle at 50% 50%,#27232e,#0e0c14);
+  border-color: #3b3544; }
+.chronicle-card.locked .card-hidden { display: grid; place-items: center; font-family: Georgia,serif;
+  color: #5e5867; font-size: 48px; font-weight: 800; }
+.chronicle-card.locked .card-title { font-size: 15px; color: #8d8593; min-height: 25px; }
+.chronicle-card.locked .card-type { font-size: 11px; opacity: .8; }
+.chronicle-card.locked .card-id { margin-top: auto; font-size: 10px; }
+.chronicle-card.reveal { animation-duration: .46s; animation-delay: calc(var(--order) * 55ms); }
+.high-tier.reveal { animation-duration: .46s, 2.2s; animation-delay: calc(var(--order) * 55ms), calc(var(--order) * 55ms + .46s); }
+.results-grid .chronicle-card { min-height: 305px; }
+.modal-content { width: min(385px,100%); }
+.modal-content .chronicle-card { min-height: 390px; }
+.modal-content .card-illustration { height: 150px; min-height: 150px; margin-bottom: 16px; }
+.modal-content .artwork-motif { width: 105px; height: 105px; }
+.modal-content .artwork-ornament { width: 139px; height: 139px; }
+.modal-content .card-title { font-size: 19px; }
+.modal-content .card-description { font-size: 14px; }
+.modal-content .card-head { font-size: 13px; }
+
+@media (max-width: 1030px) {
+  .cards-grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 13px; }
+  .collection-summary { align-items: stretch; flex-direction: column; }
+  .collection-stats { align-self: flex-start; }
+  .collection-stats > span { min-width: 98px; }
+}
+@media (max-width: 710px) {
+  .main-shell { width: calc(100% - 24px); }
+  .collection-summary { padding: 17px; margin-bottom: 12px; gap: 14px; }
+  .collection-intro h2 { font-size: 23px; margin-top: 6px; }
+  .collection-intro p { font-size: 12px; }
+  .collection-percentage { font-size: 10px; padding: 4px 8px; margin-left: 5px; }
+  .collection-stats { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); align-self: stretch; }
+  .collection-stats > span { min-width: 0; padding: 11px 5px; }
+  .collection-stats strong { font-size: 17px; }
+  .rarity-chips { display: flex; overflow-x: auto; flex-wrap: nowrap; padding: 10px; scrollbar-width: thin; }
+  .rarity-chips button { flex: 0 0 auto; font-size: 11px; gap: 6px; padding: 8px 9px; }
+  .collection-tools { gap: 8px; padding: 9px 11px 11px; }
+  .search-wrap { flex-basis: 100%; }
+  .collection-tools select { min-width: 130px; padding: 10px 9px; }
+  .archive-result-row span:last-child { display: none; }
+  .cards-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; }
+  .chronicle-card { padding: 10px; min-height: 278px; }
+  .card-head { font-size: 11px; }
+  .card-cost { font-size: 10px; padding: 3px 5px; }
+  .card-illustration { height: 96px; min-height: 96px; margin-bottom: 11px; }
+  .artwork-ornament { width: 95px; height: 95px; }
+  .artwork-motif { width: 68px; height: 68px; }
+  .card-title { font-size: 13px; min-height: 36px; }
+  .card-description { font-size: 11px; }
+  .card-type { font-size: 10px; }
+  .card-bottom { font-size: 11px; }
+  .copy-count { font-size: 9px; padding: 3px 5px; }
+  .modal-content .card-illustration { height: 145px; }
+}
+@media (max-width: 360px) {
+  .cards-grid { gap: 8px; }
+  .chronicle-card { padding: 8px; }
+  .card-cost { font-size: 9px; }
+  .card-title { font-size: 12px; }
+}
