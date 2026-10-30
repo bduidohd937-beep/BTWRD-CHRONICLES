@@ -51,7 +51,7 @@ export default function HandFan({cards,selected,disabled,discardMode,onChoose}:{
             <span>{card.rarity}</span>
             <strong>💧{card.cost}</strong>
           </span>
-          <span className="field-hand-card-art"><CardArtwork card={card}/></span>
+          <div className="field-hand-card-art"><CardArtwork card={card}/></div>
           <strong className="field-hand-card-name">{card.name}</strong>
           <small>{card.type==='유닛'?'⚔ '+(card.atk??0)+' · ♥ '+(card.hp??0):'✧ 마법'}</small>
           {discardMode&&<span className="field-hand-discard-tag">버리기</span>}
