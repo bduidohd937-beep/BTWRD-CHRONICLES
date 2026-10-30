@@ -157,7 +157,7 @@ export default function BattleApp({battle,setBattle}:{
           <span className="field-mana">💧 {player.mana}/{player.maxMana}</span>
         </div>
         <div className="field-top-actions">
-          <button type="button" aria-pressed={showLog} onClick={()=>setShowLog(v=>!v)}>📜 기록</button>
+          <button type="button" aria-pressed={showLog} onClick={()=>setShowLog(v=>!v)}>📜 전투 기록</button>
           <button type="button" aria-pressed={show3d} onClick={()=>setShow3d(v=>!v)}>
             {show3d?'◈ 3D ON':'▤ 2D'}
           </button>
