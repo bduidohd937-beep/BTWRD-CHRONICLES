@@ -206,4 +206,48 @@ describe('COMBAT ALPHA V0.5.1 cinematic battle UX',()=>{
     expect(host.querySelector('.field-card-detail')?.textContent).toContain('왕국 병사');
   });
 
+  it('requires a chosen flank for a center-lane taunt before spending mana',async()=>{
+    await act(async()=>root.render(<App/>));
+    await act(async()=>clickButton('⚔ 전투'));
+    const shield=Array.from(host.querySelectorAll('.field-hand-card'))
+      .find(el=>el.textContent?.includes('철갑 방패병')) as HTMLButtonElement;
+    const center=host.querySelector('button[data-zone="unit"][data-owner="0"][data-lane="1"]') as HTMLButtonElement;
+    await act(async()=>shield.click());
+    await act(async()=>center.click());
+    await act(async()=>clickButton('공격 표시'));
+    const confirm=Array.from(host.querySelectorAll('button'))
+      .find(el=>el.textContent?.includes('소환 확정')) as HTMLButtonElement;
+    expect(confirm.disabled).toBe(true);
+    expect(host.querySelector('.field-mana-panel')?.textContent).toContain('2 / 2');
+    await act(async()=>clickButton('← 좌측'));
+    expect(confirm.disabled).toBe(false);
+    await act(async()=>clickButton('소환 확정'));
+    expect(center.textContent).toContain('철갑 방패병');
+    expect(host.querySelector('.field-mana-panel')?.textContent).toContain('0 / 2');
+  });
+
+  it('requires target and confirmation before spending mana on a healing spell',async()=>{
+    await act(async()=>root.render(<App/>));
+    await act(async()=>clickButton('⚔ 전투'));
+    const myLane=()=>host.querySelector('button[data-zone="unit"][data-owner="0"][data-lane="0"]') as HTMLButtonElement;
+    const first=host.querySelector('.field-hand-card') as HTMLButtonElement;
+    await act(async()=>first.click());
+    await act(async()=>myLane().click());
+    await act(async()=>clickButton('공격 표시'));
+    await act(async()=>clickButton('소환 확정'));
+    await act(async()=>clickButton('턴 종료'));
+    await act(async()=>clickButton('턴 종료'));
+    const heal=Array.from(host.querySelectorAll('.field-hand-card'))
+      .find(el=>el.textContent?.includes('치유의 빛')) as HTMLButtonElement;
+    await act(async()=>heal.click());
+    expect(myLane().className).toContain('field-zone-target');
+    await act(async()=>myLane().click());
+    expect(host.querySelector('[role="dialog"][aria-label="마법 발동 확인"]')).not.toBeNull();
+    expect(host.querySelector('.field-mana-panel')?.textContent).toContain('3 / 3');
+    await act(async()=>clickButton('마법 발동'));
+    expect(host.querySelector('[role="dialog"][aria-label="마법 발동 확인"]')).toBeNull();
+    expect(host.querySelector('.field-mana-panel')?.textContent).toContain('1 / 3');
+    expect(host.querySelector('.field-effect-caption')?.textContent).toContain('치유의 빛 발동');
+  });
+
 });
