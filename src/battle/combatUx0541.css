@@ -1,0 +1,189 @@
+/* V0.5.4.1: two targeted layout adjustments only.
+   Battle rules, personal magic slots and the floating hand are untouched. */
+
+/* Primary action at the RIGHT MIDPOINT of the arena. The central battle
+   corridor stays clear of the button and the floating cards. */
+.battle-field-stage .field-turn-actionbar.field-turn-actionbar-side{
+  position:absolute;
+  z-index:28;
+  left:auto;
+  right:clamp(8px,1.15vw,20px);
+  top:50%;
+  bottom:auto;
+  transform:translateY(-50%);
+  display:flex;
+  flex-direction:column-reverse;
+  justify-content:center;
+  align-items:center;
+  gap:6px;
+  width:clamp(106px,9.2vw,145px);
+  max-width:145px;
+  min-height:91px;
+  padding:8px;
+  border:1px solid #ad915e;
+  border-radius:15px;
+  background:linear-gradient(160deg,#2b2139e8,#211a2cea);
+  box-shadow:0 8px 26px #0b0819b5,0 0 12px #d7b76f36;
+  pointer-events:auto;
+}
+.battle-field-stage .field-turn-actionbar.field-turn-actionbar-side .field-end-turn{
+  flex:0 0 auto;
+  display:block;
+  width:100%;
+  min-width:0;
+  min-height:48px;
+  padding:9px 5px;
+  border-radius:11px;
+  font-size:14px;
+  font-weight:900;
+  white-space:nowrap;
+  text-align:center;
+}
+.battle-field-stage .field-turn-actionbar.field-turn-actionbar-side .field-turn-actionstatus{
+  display:block;
+  width:100%;
+  min-width:0;
+  max-width:none;
+  padding:0 2px;
+  font-size:10px;
+  line-height:1.4;
+  color:#e1d0e7;
+  text-align:center;
+  word-break:keep-all;
+  overflow-wrap:anywhere;
+}
+.battle-field-stage .field-turn-actionbar.field-turn-actionbar-side:has(.field-end-turn-ready){
+  border-color:#f2d185;
+  box-shadow:0 0 0 2px #efce6e3d,0 0 19px #efd17c65;
+}
+
+/* A neutral global field slot occupies the centerline, with the 3D glyph
+   rendered underneath it. It does not accept interactions in this version. */
+.battle-field-stage .field-layout-overlay .field-shared-magic.field-shared-magic-center{
+  position:absolute;
+  z-index:6;
+  left:50%;
+  right:auto;
+  top:50%;
+  bottom:auto;
+  transform:translate(-50%,-50%);
+  width:clamp(108px,9.2vw,143px);
+  min-height:78px;
+  padding:8px 12px;
+  border:1px solid #dac08ba6;
+  border-radius:50%;
+  background:radial-gradient(ellipse at center,#29223bcc 0%,#201a32a8 58%,#241b31a0 80%,#19132363 100%);
+  box-shadow:0 0 0 4px #b6956430,inset 0 0 17px #e6c3772e,0 0 20px #d8b47632;
+  color:#f3deb0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  text-align:center;
+  pointer-events:none;
+  user-select:none;
+}
+.battle-field-stage .field-shared-magic-center .field-shared-emblem{
+  color:#f4d7a6;
+  font-size:16px;
+  line-height:1;
+  text-shadow:0 0 8px #f8d48ca0;
+}
+.battle-field-stage .field-shared-magic-center strong{
+  font-size:11px;
+  line-height:1.3;
+  font-weight:800;
+  color:#f3e2c4;
+  white-space:nowrap;
+}
+.battle-field-stage .field-shared-magic-center small{
+  font-size:9px;
+  line-height:1.35;
+  color:#c9b4d8;
+  white-space:nowrap;
+}
+.battle-field-stage:has(.field-2d-background) .field-shared-magic-center{
+  box-shadow:0 0 0 4px #a8876945,0 0 0 9px #8e79c329,0 0 24px #d8b47630;
+}
+
+/* Preserve battle affordances: the dormant slot is not a summon target. */
+.battle-field-stage .field-shared-magic-center,
+.battle-field-stage .field-shared-magic-center *{
+  cursor:default;
+  pointer-events:none;
+}
+
+@media(max-width:850px){
+  .battle-field-stage .field-turn-actionbar.field-turn-actionbar-side{
+    right:5px;
+    top:51%;
+    width:104px;
+    max-width:104px;
+    min-height:72px;
+    padding:6px;
+    gap:4px;
+    border-radius:12px;
+  }
+  .battle-field-stage .field-turn-actionbar.field-turn-actionbar-side .field-end-turn{
+    min-height:40px;
+    font-size:12px;
+    padding:6px 4px;
+  }
+  .battle-field-stage .field-turn-actionbar.field-turn-actionbar-side .field-turn-actionstatus{
+    font-size:9px;
+  }
+  .battle-field-stage .field-layout-overlay .field-shared-magic.field-shared-magic-center{
+    width:113px;
+    min-height:67px;
+    padding:6px 8px;
+  }
+  .battle-field-stage .field-shared-magic-center strong{font-size:10px}
+  .battle-field-stage .field-shared-magic-center small{font-size:8px}
+}
+@media(max-width:560px){
+  .battle-field-stage .field-turn-actionbar.field-turn-actionbar-side{
+    top:52%;
+    right:3px;
+    width:88px;
+    max-width:88px;
+    min-height:66px;
+    padding:5px;
+  }
+  .battle-field-stage .field-turn-actionbar.field-turn-actionbar-side .field-end-turn{
+    min-height:33px;
+    font-size:11px;
+  }
+  .battle-field-stage .field-turn-actionbar.field-turn-actionbar-side .field-turn-actionstatus{
+    font-size:8px;
+    line-height:1.3;
+  }
+  .battle-field-stage .field-layout-overlay .field-shared-magic.field-shared-magic-center{
+    min-height:56px;
+    width:95px;
+    padding:4px 6px;
+  }
+  .battle-field-stage .field-shared-magic-center .field-shared-emblem{font-size:12px}
+  .battle-field-stage .field-shared-magic-center strong{font-size:9px}
+  .battle-field-stage .field-shared-magic-center small{font-size:7px}
+}
+@media(max-height:650px){
+  .battle-field-stage .field-turn-actionbar.field-turn-actionbar-side{
+    top:50%;
+    min-height:68px;
+    gap:3px;
+    padding:5px;
+  }
+  .battle-field-stage .field-turn-actionbar.field-turn-actionbar-side .field-end-turn{
+    min-height:36px;
+    padding:5px 7px;
+  }
+  .battle-field-stage .field-layout-overlay .field-shared-magic.field-shared-magic-center{
+    min-height:59px;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .battle-field-stage .field-turn-actionbar.field-turn-actionbar-side .field-end-turn-ready{
+    animation:none;
+  }
+}
