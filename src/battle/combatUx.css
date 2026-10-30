@@ -291,3 +291,20 @@
   .field-hand-card,.field-unit-zone{transition:none}
   .field-effect-beam line{stroke-dasharray:none}
 }
+
+/* V0.5.2 — A: a destroyed opposing wall opens free attacks on other active walls. */
+.field-wall-zone.field-wall-breakthrough:not(:disabled){
+  border:2px solid #f5d17e;
+  color:#fff0c3;
+  background:linear-gradient(125deg,#56402ce8,#3d2f46ed);
+  box-shadow:0 0 0 2px #f6cc7835,0 0 18px #f5d17e90;
+}
+.field-wall-breakthrough .field-breakthrough-indicator{
+  display:grid;place-items:center;flex:0 0 auto;
+  width:17px;height:17px;border-radius:50%;
+  font-size:12px;line-height:1;font-weight:900;
+  color:#2b2034;background:#f6d38d;
+}
+@media(prefers-reduced-motion:reduce){
+  .field-wall-zone.field-wall-breakthrough:not(:disabled){animation:none}
+}
