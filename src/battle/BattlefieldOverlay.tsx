@@ -2,6 +2,7 @@ import type {CSSProperties} from 'react';
 import type {BattleState,Card,Player,Unit} from '../types';
 import {eligibleEffectLanes,legalAttackTargets,canPlayCard} from '../engine';
 import CardArtwork from '../foundation/CardArtwork';
+import {CARD_MAP} from '../foundation/foundationCards';
 
 /**
  * Presentational battlefield overlay: every clickable slot reads the engine state.
@@ -22,6 +23,7 @@ export interface BattlefieldOverlayProps {
   onResolveEffect:(lane:number)=>void;
   onRetreat:(lane:number)=>void;
   onInspect:(card:Card)=>void;
+  onPreviewUnit:(unit:Unit|null)=>void;
 }
 
 function InstalledSpellZone({player,lane}: {player:Player;lane:number}){
@@ -53,26 +55,32 @@ function WallZone({owner,player,lane,canHitWall,onStrike}:{
   </button>;
 }
 
-function UnitZone({owner,lane,unit,player,selected,canDeploy,canHit,canResolve,canRetreat,canSpellTarget,canChoose,onPlay,onStrike,onChooseUnit,onResolveEffect,onRetreat,onInspect}:{
+function UnitZone({owner,lane,unit,player,selected,canDeploy,canHit,canResolve,canRetreat,canSpellTarget,canChoose,onPlay,onStrike,onChooseUnit,onResolveEffect,onRetreat,onInspect,onPreviewUnit}:{
   owner:number;lane:number;unit:Unit|undefined;player:Player;selected:boolean;
   canDeploy:boolean;canHit:boolean;canResolve:boolean;canRetreat:boolean;canSpellTarget:boolean;canChoose:boolean;
   onPlay:(lane:number)=>void;onStrike:(lane:number,target:number|null)=>void;
   onChooseUnit:(lane:number)=>void;onResolveEffect:(lane:number)=>void;
   onRetreat:(lane:number)=>void;onInspect:(card:Card)=>void;
+  onPreviewUnit:(unit:Unit|null)=>void;
 }){
   const canClick=canDeploy||canHit||canResolve||canRetreat||canSpellTarget||canChoose||!!unit;
   const canSelect=canChoose&&!canSpellTarget&&!canResolve;
   const inspectLabel=unit?unit.name:'빈 유닛 존';
-  const card=unit?{id:unit.cardId,name:unit.name,rarity:'일반',type:'유닛' as const,
-    cost:0,atk:unit.atk,hp:unit.hp,text:'전장에 배치된 유닛'}:null;
+  const card=unit?(CARD_MAP.get(unit.cardId)??null):null;
   const disabled=!canClick;
   return <button type="button" data-zone="unit" data-owner={owner} data-lane={lane}
     className={['field-unit-zone',unit?'field-unit-occupied':'',
       selected?'field-unit-selected':'',
       canDeploy||canHit||canResolve||canRetreat||canSpellTarget?'field-zone-target':'',
       canSelect?'field-unit-ready':'',
+      unit?(unit.stance==='defense'?'field-unit-defense':'field-unit-attack'):'',
       player.walls[lane]===0?'field-zone-closed':''].join(' ')}
-    disabled={disabled} onClick={()=>{
+    disabled={disabled} data-stance={unit?.stance}
+    onMouseEnter={()=>onPreviewUnit(unit??null)}
+    onMouseLeave={()=>onPreviewUnit(null)}
+    onFocus={()=>onPreviewUnit(unit??null)}
+    onBlur={()=>onPreviewUnit(null)}
+    onClick={()=>{
       if(canResolve){onResolveEffect(lane);return;}
       if(canSpellTarget){onPlay(lane);return;}
       if(canHit){onStrike(lane,0);return;}
@@ -102,7 +110,7 @@ function UnitZone({owner,lane,unit,player,selected,canDeploy,canHit,canResolve,c
   </button>;
 }
 
-function PlayerFormation({battle,owner,chosenCard,chosenUnit,onPlay,onStrike,onChooseUnit,onResolveEffect,onRetreat,onInspect}:{
+function PlayerFormation({battle,owner,chosenCard,chosenUnit,onPlay,onStrike,onChooseUnit,onResolveEffect,onRetreat,onInspect,onPreviewUnit}:{
   owner:number;battle:BattleState;chosenCard:number|null;chosenUnit:SelectedUnit|null;
   onPlay:(lane:number)=>void;onStrike:(lane:number,target:number|null)=>void;
   onChooseUnit:(lane:number)=>void;onResolveEffect:(lane:number)=>void;
@@ -148,7 +156,8 @@ function PlayerFormation({battle,owner,chosenCard,chosenUnit,onPlay,onStrike,onC
             canResolve={canResolve} canRetreat={canRetreat}
             canSpellTarget={canSpellTarget}
             onPlay={onPlay} onStrike={onStrike} onChooseUnit={onChooseUnit}
-            onResolveEffect={onResolveEffect} onRetreat={onRetreat} onInspect={onInspect}/>
+            onResolveEffect={onResolveEffect} onRetreat={onRetreat} onInspect={onInspect}
+          onPreviewUnit={onPreviewUnit}/>
           {owner===0?<>
             <InstalledSpellZone player={player} lane={lane}/>
             <WallZone owner={owner} player={player} lane={lane}
