@@ -53,16 +53,15 @@ function WallZone({owner,player,lane,canHitWall,onStrike}:{
   </button>;
 }
 
-function UnitZone({owner,lane,unit,player,selected,canDeploy,canHit,canResolve,canRetreat,canSpellTarget,onPlay,onStrike,onChooseUnit,onResolveEffect,onRetreat,onInspect}:{
+function UnitZone({owner,lane,unit,player,selected,canDeploy,canHit,canResolve,canRetreat,canSpellTarget,canChoose,onPlay,onStrike,onChooseUnit,onResolveEffect,onRetreat,onInspect}:{
   owner:number;lane:number;unit:Unit|undefined;player:Player;selected:boolean;
-  canDeploy:boolean;canHit:boolean;canResolve:boolean;canRetreat:boolean;canSpellTarget:boolean;
+  canDeploy:boolean;canHit:boolean;canResolve:boolean;canRetreat:boolean;canSpellTarget:boolean;canChoose:boolean;
   onPlay:(lane:number)=>void;onStrike:(lane:number,target:number|null)=>void;
   onChooseUnit:(lane:number)=>void;onResolveEffect:(lane:number)=>void;
   onRetreat:(lane:number)=>void;onInspect:(card:Card)=>void;
 }){
-  const canClick=canDeploy||canHit||canResolve||canRetreat||canSpellTarget||selected||
-    (!!unit&&owner===0&&unit.canAttack);
-  const canSelect=!!unit&&owner===0&&unit.canAttack&&!canSpellTarget&&!canResolve;
+  const canClick=canDeploy||canHit||canResolve||canRetreat||canSpellTarget||canChoose;
+  const canSelect=canChoose&&!canSpellTarget&&!canResolve;
   const inspectLabel=unit?unit.name:'빈 유닛 존';
   const card=unit?{id:unit.cardId,name:unit.name,rarity:'일반',type:'유닛' as const,
     cost:0,atk:unit.atk,hp:unit.hp,text:'전장에 배치된 유닛'}:null;
@@ -143,7 +142,7 @@ function PlayerFormation({battle,owner,chosenCard,chosenUnit,onPlay,onStrike,onC
           <InstalledSpellZone player={player} lane={lane}/>
           <UnitZone owner={owner} lane={lane} unit={unit} player={player}
             selected={active&&chosenUnit?.lane===lane}
-            canDeploy={canDeploy&&!unit} canHit={canHit}
+            canDeploy={canDeploy&&!unit} canHit={canHit} canChoose={canChoose}
             canResolve={canResolve} canRetreat={canRetreat}
             canSpellTarget={canSpellTarget}
             onPlay={onPlay} onStrike={onStrike} onChooseUnit={onChooseUnit}
