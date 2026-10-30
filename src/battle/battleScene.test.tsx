@@ -37,7 +37,7 @@ afterEach(async()=>{
   document.body.style.overflow='';
 });
 
-describe('COMBAT ALPHA V0.5.1 cinematic battle UX',()=>{
+describe('COMBAT ALPHA V0.5.3 streamlined flow',()=>{
   it('hides the global page header and nav during battle, keeping the 3D scene and hand visible',async()=>{
     await act(async()=>root.render(<App/>));
     expect(host.querySelector('.app-tabs')).not.toBeNull();
@@ -146,10 +146,8 @@ describe('COMBAT ALPHA V0.5.1 cinematic battle UX',()=>{
     expect(host.querySelector('[role="dialog"][aria-label="소환 표시 선택"]')).not.toBeNull();
     expect(host.querySelector('.field-mana-panel')?.textContent).toContain('2 / 2');
     expect(host.querySelectorAll('.field-hand-card')).toHaveLength(5);
-    const summon=Array.from(host.querySelectorAll('button')).find(x=>x.textContent?.includes('소환 확정')) as HTMLButtonElement;
-    expect(summon.disabled).toBe(true);
+    expect(Array.from(host.querySelectorAll('button')).some(x=>x.textContent?.includes('소환 확정'))).toBe(false);
     await act(async()=>clickButton('공격 표시'));
-    await act(async()=>clickButton('소환 확정'));
     expect(host.querySelector('[role="dialog"][aria-label="소환 표시 선택"]')).toBeNull();
     expect(myZone().textContent).toContain('왕국 병사');
     expect(myZone().getAttribute('data-stance')).toBe('attack');
@@ -186,7 +184,6 @@ describe('COMBAT ALPHA V0.5.1 cinematic battle UX',()=>{
 
     await act(async()=>zone().click());
     await act(async()=>clickButton('수비 표시'));
-    await act(async()=>clickButton('소환 확정'));
     expect(zone().getAttribute('data-stance')).toBe('defense');
     expect(zone().className).toContain('field-unit-defense');
     expect(host.querySelector('.field-mana-panel')?.textContent).toContain('1 / 2');
@@ -200,7 +197,6 @@ describe('COMBAT ALPHA V0.5.1 cinematic battle UX',()=>{
     await act(async()=>first.click());
     await act(async()=>ally(0).click());
     await act(async()=>clickButton('공격 표시'));
-    await act(async()=>clickButton('소환 확정'));
     expect(host.querySelector('.field-effect-beam')).not.toBeNull();
     expect(host.querySelector('.field-effect-caption')?.textContent).toContain('왕국 병사 소환');
     expect(host.querySelector('.field-card-detail')?.textContent).toContain('왕국 병사');
@@ -215,13 +211,12 @@ describe('COMBAT ALPHA V0.5.1 cinematic battle UX',()=>{
     await act(async()=>shield.click());
     await act(async()=>center.click());
     await act(async()=>clickButton('공격 표시'));
-    const confirm=Array.from(host.querySelectorAll('button'))
-      .find(el=>el.textContent?.includes('소환 확정')) as HTMLButtonElement;
-    expect(confirm.disabled).toBe(true);
+    expect(host.querySelector('[aria-label="소환 표시 선택"]')).not.toBeNull();
     expect(host.querySelector('.field-mana-panel')?.textContent).toContain('2 / 2');
-    await act(async()=>clickButton('← 좌측'));
-    expect(confirm.disabled).toBe(false);
-    await act(async()=>clickButton('소환 확정'));
+    const left=(Array.from(host.querySelectorAll('button'))
+      .find(el=>el.textContent?.includes('← 좌측'))) as HTMLButtonElement;
+    expect(left.disabled).toBe(false);
+    await act(async()=>left.click());
     expect(center.textContent).toContain('철갑 방패병');
     expect(host.querySelector('.field-mana-panel')?.textContent).toContain('0 / 2');
   });
@@ -248,6 +243,39 @@ describe('COMBAT ALPHA V0.5.1 cinematic battle UX',()=>{
     expect(host.querySelector('[role="dialog"][aria-label="마법 발동 확인"]')).toBeNull();
     expect(host.querySelector('.field-mana-panel')?.textContent).toContain('1 / 3');
     expect(host.querySelector('.field-effect-caption')?.textContent).toContain('치유의 빛 발동');
+  });
+
+  it('highlights turn end only when no playable cards and no unit actions remain',async()=>{
+    await act(async()=>root.render(<App/>));
+    await act(async()=>clickButton('⚔ 전투'));
+    const end=()=>Array.from(host.querySelectorAll('button'))
+      .find(x=>x.textContent?.includes('턴 종료')) as HTMLButtonElement;
+    expect(end().className).not.toContain('field-end-turn-ready');
+    const first=host.querySelector('.field-hand-card') as HTMLButtonElement;
+    const zone=host.querySelector('button[data-zone="unit"][data-owner="0"][data-lane="0"]') as HTMLButtonElement;
+    await act(async()=>first.click());
+    await act(async()=>zone.click());
+    await act(async()=>clickButton('공격 표시'));
+    expect(end().className).not.toContain('field-end-turn-ready');
+  });
+
+  it('labels current on-summon effects mandatory when printed card text does not grant a choice',async()=>{
+    await act(async()=>root.render(<App/>));
+    await act(async()=>clickButton('⚔ 전투'));
+    // Enemy A's initial U003 can trigger once the opponent has an eligible unit.
+    // The engine-level optionality test separately covers custom opt-in text.
+    expect(host.querySelector('.field-effect-pending')).toBeNull();
+    expect(host.textContent).toContain('카드 선택');
+  });
+
+  it('keeps the hand over the battlefield and mana detail uses a variable crystal count',async()=>{
+    await act(async()=>root.render(<App/>));
+    await act(async()=>clickButton('⚔ 전투'));
+    const stage=host.querySelector('.battle-field-stage')!;
+    expect(stage.querySelector('.field-hand-layer')).not.toBeNull();
+    const pips=stage.querySelector('.field-mana-pips') as HTMLElement;
+    expect(pips.style.getPropertyValue('--pip-count')).toBe('2');
+    expect(pips.querySelectorAll('.field-mana-pip')).toHaveLength(2);
   });
 
 });
