@@ -100,6 +100,7 @@ export default function BattleApp({battle,setBattle}:{
   const [stance,setStance]=useState<Stance>('attack');
   const [guardSide,setGuardSide]=useState<0|2>(0);
   const [show3d,setShow3d]=useState(true);
+  const [showLog,setShowLog]=useState(false);
   const [message,setMessage]=useState('');
   const actingCard=chosenCard===null?null:player.hand[chosenCard];
   const opposing=battle.players[1-battle.active];
@@ -196,6 +197,9 @@ export default function BattleApp({battle,setBattle}:{
         <span className="combat-mana">💧 {player.mana}/{player.maxMana}</span>
       </div>
       <div className="combat-actions">
+        <button type="button" aria-pressed={showLog} onClick={()=>setShowLog(v=>!v)}>
+          📜 전투 기록
+        </button>
         <button type="button" className={show3d?'combat-toggle-on':''}
           aria-pressed={show3d} onClick={()=>setShow3d(v=>!v)}>
           {show3d?'◈ 3D 전장 ON':'▤ 2D 전장'}
@@ -212,19 +216,25 @@ export default function BattleApp({battle,setBattle}:{
        battle.discarding?'손패를 직접 선택해 7장 이하로 줄이고 다시 턴 종료를 누르세요.':
        message||'① 손패 카드 선택 → 빈 전선 소환 · ② 녹색 유닛 선택 → 적 유닛 또는 성벽 클릭 · ③ 턴 종료'}
     </div>
-    <div className={`combat-arena ${show3d?'combat-arena-3d':'combat-arena-flat'}`}>
-      {show3d&&<Battlefield3D battle={battle}/>}
-      <div className="combat-arena-overlay">
+    <div className="battle-scene-board">
+      <div className="battle-scene-side-panel" aria-label="양측 전선 및 카드 조작">
         <TeamHud player={battle.players[1]} owner={1} battle={battle}
           chosenCard={chosenCard} chosenUnit={chosenUnit}
           onPlace={place} onStrike={strike} onChooseUnit={chooseUnit} onResolveEffect={resolveEffect}/>
-        <div className="combat-arena-center">
-          <span>✦ {show3d?'LIVE 3D BATTLEFIELD':'TACTICAL BATTLEFIELD'} ✦</span>
-          <small>위: B · 아래: A · 좌/중/우 3전선</small>
-        </div>
+        <div className="battle-scene-match-divider" aria-hidden="true"><span>⚔ 전선 교전</span></div>
         <TeamHud player={battle.players[0]} owner={0} battle={battle}
           chosenCard={chosenCard} chosenUnit={chosenUnit}
           onPlace={place} onStrike={strike} onChooseUnit={chooseUnit} onResolveEffect={resolveEffect}/>
+        <p className="battle-side-hint">위쪽 플레이어 B · 아래쪽 플레이어 A · 전선 클릭으로 소환/공격</p>
+      </div>
+      <div className={`combat-arena ${show3d?'combat-arena-3d':'combat-arena-flat'}`}
+        aria-label="전장 3D 시각화 영역">
+        {show3d&&<Battlefield3D battle={battle}/>}
+        <div className="battle-stage-heading">✦ {show3d?'LIVE 3D BATTLEFIELD':'TACTICAL BATTLEFIELD'} ✦</div>
+        <div className="battle-stage-lanes" aria-hidden="true">
+          <span>좌측 전선</span><span>중앙 전선</span><span>우측 전선</span>
+        </div>
+        {!show3d&&<div className="battle-stage-placeholder">3D 전장 표시를 켜면 성벽과 유닛을 볼 수 있습니다.</div>}
       </div>
     </div>
     {battle.pendingRetreat&&<div className="combat-retreat-banner">
@@ -269,13 +279,16 @@ export default function BattleApp({battle,setBattle}:{
         </button>;
       })}
     </div>
-    <details className="combat-details">
-      <summary>📜 전투 기록 · 현재 시험 규칙 <span>펼치기</span></summary>
-      <div className="combat-details-inner">
-        <div><strong>최근 전투 기록</strong>{battle.log.slice(0,10).map((line,i)=><p key={i}>{line}</p>)}</div>
-        <p><strong>V0.4 시험 구현:</strong> 3성벽, 1전선 1유닛, 수비 피해 반감, 같은 전선 유닛 우선, 측면 도발의 중앙 보호와 중앙 도발의 좌/우 선택, 대상 선택형 소환 효과, 돌격 기병, 간이 마법 5종, 마법 존 빈 슬롯, 손패 선택 버리기.</p>
-        <p><strong>미구현:</strong> 체인/마법 속도, 정식 지속·장착마법과 마법 존 점유, 계승/합성, 우회 공성 A/B/C, 일부 유닛 고유 능력. 3D 모델은 임시 절차적 모델입니다.</p>
+    {showLog&&<aside className="combat-log-drawer" aria-label="전투 기록 및 구현 범위">
+      <div className="combat-log-drawer-header">
+        <strong>📜 전투 기록 · 규칙 상태</strong>
+        <button type="button" onClick={()=>setShowLog(false)}>닫기</button>
       </div>
-    </details>
+      <ol className="combat-log-list">
+        {battle.log.slice(0,12).map((line,i)=><li key={i}>{line}</li>)}
+      </ol>
+      <p><strong>V0.4 구현:</strong> 3성벽, 1전선 1유닛, 공격·수비, 도발 차단, 대상 선택형 소환 효과, 돌격 기병, 간이 마법 5종, 손패 7장 선택 버리기.</p>
+      <p><strong>미구현:</strong> 정식 마법 존·체인·장착, 계승·합성, 우회 공성 A/B/C, 일부 유닛 능력. 3D는 임시 모델입니다.</p>
+    </aside>}
   </section>;
 }
