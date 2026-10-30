@@ -40,6 +40,10 @@ export interface PendingEffect {
   sourceCardId:string;
   type:'enemy-damage'|'ally-heal'|'enemy-disable';
   amount:number;
+  /** The current prototype requires player choice before targeting. Legacy pending effects without this property also await choice. */
+  awaitingChoice?:boolean;
+  /** Future exception: only explicitly flagged effects cannot be skipped. */
+  mandatory?:boolean;
 }
 export interface Player {
   name:string;
