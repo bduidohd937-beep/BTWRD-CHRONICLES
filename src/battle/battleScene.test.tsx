@@ -37,7 +37,7 @@ afterEach(async()=>{
   document.body.style.overflow='';
 });
 
-describe('COMBAT ALPHA V0.5.0 full battlefield overlay',()=>{
+describe('COMBAT ALPHA V0.5.1 cinematic battle UX',()=>{
   it('hides the global page header and nav during battle, keeping the 3D scene and hand visible',async()=>{
     await act(async()=>root.render(<App/>));
     expect(host.querySelector('.app-tabs')).not.toBeNull();
@@ -143,8 +143,67 @@ describe('COMBAT ALPHA V0.5.0 full battlefield overlay',()=>{
     expect(myZone().disabled).toBe(false);
     expect(myZone().className).toContain('field-zone-target');
     await act(async()=>myZone().dispatchEvent(new MouseEvent('click',{bubbles:true})));
+    expect(host.querySelector('[role="dialog"][aria-label="소환 표시 선택"]')).not.toBeNull();
+    expect(host.querySelector('.field-mana-panel')?.textContent).toContain('2 / 2');
+    expect(host.querySelectorAll('.field-hand-card')).toHaveLength(5);
+    const summon=Array.from(host.querySelectorAll('button')).find(x=>x.textContent?.includes('소환 확정')) as HTMLButtonElement;
+    expect(summon.disabled).toBe(true);
+    await act(async()=>clickButton('공격 표시'));
+    await act(async()=>clickButton('소환 확정'));
+    expect(host.querySelector('[role="dialog"][aria-label="소환 표시 선택"]')).toBeNull();
     expect(myZone().textContent).toContain('왕국 병사');
+    expect(myZone().getAttribute('data-stance')).toBe('attack');
+    expect(host.querySelector('.field-mana-panel')?.textContent).toContain('1 / 2');
     expect(host.querySelectorAll('.field-hand-card')).toHaveLength(4);
+  });
+
+  it('previews original card art, stats and effect in upper-left detail inspector',async()=>{
+    await act(async()=>root.render(<App/>));
+    await act(async()=>clickButton('⚔ 전투'));
+    const detail=host.querySelector('.field-card-detail');
+    expect(detail).not.toBeNull();
+    const first=host.querySelector('.field-hand-card') as HTMLButtonElement;
+    await act(async()=>first.dispatchEvent(new FocusEvent('focusin',{bubbles:true})));
+    const inspected=host.querySelector('.field-card-detail')!;
+    expect(inspected.textContent).toContain('왕국 병사');
+    expect(inspected.textContent).toContain('효과 없음');
+    expect(inspected.querySelector('.artwork')).not.toBeNull();
+  });
+
+  it('offers defense summon, preview mana cost and cancel without spending',async()=>{
+    await act(async()=>root.render(<App/>));
+    await act(async()=>clickButton('⚔ 전투'));
+    const first=host.querySelector('.field-hand-card') as HTMLButtonElement;
+    const zone=()=>host.querySelector('button[data-zone="unit"][data-owner="0"][data-lane="1"]') as HTMLButtonElement;
+    await act(async()=>first.click());
+    expect(host.querySelector('.field-mana-panel')?.textContent).toContain('사용 후 1/2');
+    await act(async()=>zone().click());
+    expect(host.querySelector('[aria-label="소환 표시 선택"]')).not.toBeNull();
+    await act(async()=>clickButton('취소'));
+    expect(host.querySelector('[aria-label="소환 표시 선택"]')).toBeNull();
+    expect(host.querySelector('.field-mana-panel')?.textContent).toContain('2 / 2');
+    expect(host.querySelectorAll('.field-hand-card')).toHaveLength(5);
+
+    await act(async()=>zone().click());
+    await act(async()=>clickButton('수비 표시'));
+    await act(async()=>clickButton('소환 확정'));
+    expect(zone().getAttribute('data-stance')).toBe('defense');
+    expect(zone().className).toContain('field-unit-defense');
+    expect(host.querySelector('.field-mana-panel')?.textContent).toContain('1 / 2');
+  });
+
+  it('shows an effect source and forces target selection before another action',async()=>{
+    await act(async()=>root.render(<App/>));
+    await act(async()=>clickButton('⚔ 전투'));
+    const ally=(lane:number)=>host.querySelector('button[data-zone="unit"][data-owner="0"][data-lane="'+lane+'"]') as HTMLButtonElement;
+    const first=host.querySelector('.field-hand-card') as HTMLButtonElement;
+    await act(async()=>first.click());
+    await act(async()=>ally(0).click());
+    await act(async()=>clickButton('공격 표시'));
+    await act(async()=>clickButton('소환 확정'));
+    expect(host.querySelector('.field-effect-beam')).not.toBeNull();
+    expect(host.querySelector('.field-effect-caption')?.textContent).toContain('왕국 병사 소환');
+    expect(host.querySelector('.field-card-detail')?.textContent).toContain('왕국 병사');
   });
 
 });
