@@ -1,0 +1,293 @@
+/* V0.5.1 · Combat UX: grounded card data, readable mana, and deliberate summons.
+   Scoped to battle only, preserving all collection/gacha CSS. */
+.field-card-detail{
+  --detail-accent:#c0a7d3;
+  position:absolute;
+  z-index:19;
+  left:clamp(9px,1.2vw,22px);
+  top:clamp(63px,8.2vh,84px);
+  width:clamp(195px,17vw,258px);
+  max-height:min(65vh,550px);
+  overflow:auto;
+  scrollbar-width:thin;
+  pointer-events:none;
+  border:1px solid #8c749eaa;
+  border-top:2px solid var(--detail-accent);
+  border-radius:12px;
+  padding:10px;
+  color:#eee1ea;
+  background:linear-gradient(165deg,#171322f2,#24192cf0);
+  box-shadow:0 14px 30px #09051199;
+  backdrop-filter:blur(8px);
+}
+.field-card-detail-top{
+  display:flex;justify-content:space-between;align-items:center;
+  color:var(--detail-accent);font-size:10px;font-weight:700;
+  letter-spacing:.4px;margin-bottom:8px;
+}
+.field-card-detail-art{
+  height:clamp(95px,15vh,155px);
+  width:100%;position:relative;overflow:hidden;
+  border:1px solid #9985a88a;border-radius:8px;
+  background:radial-gradient(ellipse,#382c4a,#17111d);
+}
+.field-card-detail-art .artwork{width:100%;height:100%}
+.field-card-detail-art .artwork-motif{height:95px;width:95px}
+.field-card-detail-art .artwork-ornament{height:135px;width:135px}
+.field-card-detail h2{
+  font-size:15px;line-height:1.35;margin:8px 0 6px;
+  color:#ffe5ba;font-weight:900;
+}
+.field-card-detail-stats{
+  display:flex;align-items:center;flex-wrap:wrap;gap:5px;
+  margin-bottom:7px;
+}
+.field-card-detail-stats span{
+  padding:3px 5px;border-radius:5px;
+  background:#403249b5;border:1px solid #6454728c;
+  color:#efe0f6;font-size:10px;
+}
+.field-card-detail-stats .field-detail-attack{
+  background:#7b30323b;color:#ffbdba;border-color:#d3787a75;
+}
+.field-card-detail-stats .field-detail-defense{
+  background:#244f7d56;color:#b9d9fc;border-color:#85b7f075;
+}
+.field-card-detail-effect{
+  border-top:1px solid #665472;
+  padding-top:7px;line-height:1.55;
+}
+.field-card-detail-effect strong{
+  color:#e7cba0;font-size:11px;letter-spacing:.2px;
+}
+.field-card-detail-effect p{font-size:11px;margin:5px 0;white-space:normal}
+.field-card-detail-keywords{
+  margin-top:7px;padding:6px 7px;
+  background:#2d2438bb;border:1px solid #756387;
+  border-radius:7px;
+}
+.field-card-detail-keywords p{
+  color:#cbb9dc;font-size:10px;line-height:1.55;margin:3px 0;
+}
+.field-card-detail-keywords b{color:#e9d3ff;margin-right:4px}
+.field-card-detail-note{font-size:9px;color:#b4a4c3;display:block;margin-top:5px}
+.field-card-detail-empty{
+  padding:13px 12px;
+  display:flex;flex-direction:column;gap:7px;
+  width:clamp(175px,16vw,224px);
+  border-style:dashed;border-top-style:solid;
+}
+.field-card-detail-empty span{color:#c9add7;font-size:10px;letter-spacing:1px}
+.field-card-detail-empty strong{color:#dfc4e9;font-size:12px}
+.field-card-detail-empty small{color:#aa9abb;font-size:10px;line-height:1.5}
+.field-mana-panel{
+  position:absolute;z-index:20;right:clamp(8px,1.3vw,20px);bottom:clamp(8px,1.3vh,17px);
+  width:clamp(170px,15vw,225px);
+  padding:10px;border:1px solid #6d8fac;border-radius:11px;
+  background:linear-gradient(125deg,#142e45eb,#1c1a2ded);
+  box-shadow:0 8px 22px #08071999;backdrop-filter:blur(4px);
+  color:#cfe9ff;
+  pointer-events:none;
+}
+.field-mana-panel-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.field-mana-panel-head strong{font-size:11px}
+.field-mana-panel-head span{font-size:17px;font-weight:900;color:#b7ebff}
+.field-mana-pips{
+  display:flex;gap:4px;align-items:center;justify-content:space-between;
+  margin-top:7px;
+}
+.field-mana-pip{
+  display:grid;place-items:center;flex:1;max-width:28px;min-width:0;
+  height:23px;border-radius:4px;font-size:14px;
+  background:#263346;
+  border:1px solid #66819d;
+  color:#4e6179;
+  transform:skew(-7deg);
+}
+.field-mana-pip.is-filled{
+  color:#dcf8ff;
+  text-shadow:0 0 6px #68d9fa,0 0 13px #53bdf6;
+  background:linear-gradient(165deg,#27597c,#316eb0);
+  border-color:#7ddaff;
+  box-shadow:inset 0 0 6px #74d9f36e,0 0 7px #56caff4d;
+}
+.field-mana-pip.is-spending{
+  background:linear-gradient(145deg,#6d5b54,#876d4f);
+  border-color:#e5c081;color:#ffdfa4;
+  box-shadow:0 0 9px #f0bc6860;
+}
+.field-mana-panel>small{
+  display:block;margin-top:6px;font-size:10px;
+  color:#edcf95;
+}
+.field-mana-panel>small.mana-insufficient{color:#ff9d9c}
+.field-unit-zone.field-unit-occupied.field-unit-attack{
+  border:1px solid #c57880;
+  background:linear-gradient(145deg,#612b37cc,#33233de6);
+  box-shadow:inset 0 0 18px #d15f6763,0 0 5px #b84c6155;
+}
+.field-unit-zone.field-unit-occupied.field-unit-defense{
+  border:1px solid #6b9dd7;
+  background:linear-gradient(145deg,#234b69d9,#1f2e49ef);
+  box-shadow:inset 0 0 18px #4d99e05b,0 0 6px #4d98d652;
+}
+.field-unit-zone.field-unit-occupied.field-unit-attack .field-card-details small:last-child{
+  color:#ffb2b3;
+}
+.field-unit-zone.field-unit-occupied.field-unit-defense .field-card-details small:last-child{
+  color:#abd6ff;
+}
+.field-unit-zone.field-unit-selected{border-width:2px!important}
+.field-unit-zone.field-unit-ready:not(.field-zone-target){outline:1px solid #9fd8b1;outline-offset:2px}
+/* Cards remain near their own spell row; model figurines now stand farther toward the center. */
+.field-formation-enemy{top:18%}
+.field-formation-self{bottom:21%}
+.field-formation-enemy .field-unit-zone{transform:perspective(420px) rotateX(17deg) translateY(-3px)}
+.field-formation-self .field-unit-zone{transform:perspective(420px) rotateX(17deg) translateY(3px)}
+.field-formation .field-unit-zone:hover:not(:disabled){transform:perspective(420px) rotateX(4deg) translateY(-5px)}
+.field-effect-pending{
+  position:absolute;z-index:18;left:50%;top:15%;
+  transform:translateX(-50%);
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  justify-content:center;
+  max-width:min(480px,70vw);
+  padding:7px 11px;
+  color:#ffdfaf;font-size:11px;
+  background:#3b2342eb;border:1px solid #deb980;border-radius:10px;
+  pointer-events:none;box-shadow:0 0 22px #e9a55a42;
+}
+.field-effect-pending strong{font-size:12px}
+.field-effect-beam{
+  position:absolute;inset:0;z-index:11;pointer-events:none;overflow:hidden;
+}
+.field-effect-beam svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.field-effect-result{
+  position:absolute;transform:translate(-50%,-50%);
+  font-size:30px;font-weight:950;color:#ffe3a4;text-shadow:0 0 13px #ef9e4e,0 3px 5px #120c1a;
+}
+.field-effect-result.field-effect-damage,
+.field-effect-result.field-effect-attack{color:#ffa3a5;text-shadow:0 0 16px #dd4657}
+.field-effect-result.field-effect-heal{color:#96f7dc;text-shadow:0 0 16px #45bd8f}
+.field-effect-caption{
+  position:absolute;bottom:29%;left:50%;transform:translateX(-50%);
+  max-width:min(400px,55vw);width:max-content;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  background:#221a30ee;border:1px solid #d4af78;
+  border-radius:9px;padding:7px 12px;
+  color:#ffe3ac;text-align:center;
+}
+.field-effect-caption strong{font-size:12px}
+.field-effect-caption span{font-size:10px;color:#d9c6d9}
+.field-play-backdrop{
+  position:absolute;z-index:55;inset:0;
+  display:grid;place-items:center;padding:12px;
+  background:#0906159c;
+  backdrop-filter:blur(1px);
+}
+.field-play-dialog{
+  width:min(480px,96%);
+  max-height:min(82vh,640px);overflow:auto;
+  padding:20px;border:1px solid #e1c187;border-radius:15px;
+  color:#f4dfc0;text-align:center;
+  background:linear-gradient(153deg,#36243c,#181524);
+  box-shadow:0 25px 60px #030106d7,0 0 38px #ac6e6c35;
+}
+.field-play-stage{
+  display:block;letter-spacing:.5px;color:#c0aec9;font-size:10px;margin-bottom:9px;
+}
+.field-play-stage b{color:#f1c17e;margin:0 4px}
+.field-play-dialog>strong{
+  display:block;font-size:21px;font-family:Georgia,"Malgun Gothic",serif;
+  color:#ffe4af;
+}
+.field-play-dialog p{font-size:12px;line-height:1.6;margin:8px 0;color:#e0cdda}
+.field-play-dialog .field-play-card-effect{
+  margin:13px 0;padding:10px;
+  color:#f6e4d3;background:#2a2036;border:1px solid #685378;border-radius:8px;
+}
+.field-play-dialog .field-play-cost{
+  color:#adddf0;background:#1b273b;padding:7px;border-radius:7px;
+}
+.field-stance-picker{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0;
+}
+.field-stance-picker button{
+  min-height:76px;padding:10px 9px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  font-size:13px;font-weight:900;border-width:1px;border-radius:10px;
+}
+.field-stance-picker button small{font-size:9px;font-weight:500;line-height:1.5}
+.field-stance-picker .stance-attack{
+  color:#f3b9b8;border-color:#a44f59;background:#5e2a3580;
+}
+.field-stance-picker .stance-defense{
+  color:#bcd9ff;border-color:#4d89c6;background:#213e607d;
+}
+.field-stance-picker .stance-attack.chosen{
+  border:2px solid #f19b9d;background:#6d313c;box-shadow:0 0 20px #dc7b8654;
+}
+.field-stance-picker .stance-defense.chosen{
+  border:2px solid #90c9ff;background:#284b77;box-shadow:0 0 20px #539de35e;
+}
+.field-guard-choice{
+  margin-top:10px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;
+  color:#d7c6e5;font-size:11px;
+}
+.field-guard-choice span{width:100%}
+.field-guard-choice button{padding:5px 9px;font-size:11px}
+.field-guard-choice button[aria-pressed="true"]{
+  background:#6e584c;border:1px solid #f4d093;color:#ffe8b3;
+}
+.field-play-dialog-actions{display:flex;justify-content:center;gap:10px;margin-top:16px}
+.field-play-dialog-actions button{flex:1;padding:10px 12px;font-size:12px}
+.field-play-confirm{
+  border-color:#e8c481;background:#71583c;color:#ffe7b7;font-weight:900;
+}
+.field-play-confirm:disabled{opacity:.44;cursor:not-allowed}
+.field-hand-unavailable{
+  opacity:.62;filter:saturate(.45);
+}
+.field-hand-card.field-hand-unavailable:hover,
+.field-hand-card.field-hand-unavailable.field-hand-hovered{
+  z-index:30;filter:saturate(.85);opacity:.94;
+  transform:translateY(-47px) rotate(0deg) scale(1.14);
+}
+.field-hand-layer .field-card-inspect{display:none}
+.field-info-pills{bottom:11px;left:11px}
+.field-selected-unit-panel{z-index:21}
+@media(max-width:1050px){
+  .field-card-detail{top:72px;width:190px;max-height:51vh;padding:8px}
+  .field-card-detail-art{height:95px}
+  .field-card-detail-art .artwork-motif{width:72px;height:72px}
+  .field-card-detail-keywords p{font-size:9px}
+  .field-mana-panel{width:175px}
+  .field-formation-enemy{top:18%}
+  .field-formation-self{bottom:22%}
+}
+@media(max-width:740px){
+  .field-card-detail{width:158px;top:62px;max-height:43vh;padding:6px}
+  .field-card-detail-art{height:72px}
+  .field-card-detail h2{font-size:11px}
+  .field-card-detail-stats span{font-size:9px}
+  .field-card-detail-effect p{font-size:9px}
+  .field-card-detail-keywords{display:none}
+  .field-mana-panel{width:136px;padding:6px;bottom:115px}
+  .field-mana-pip{font-size:10px;height:17px}
+  .field-mana-panel-head span{font-size:13px}
+  .field-formation-enemy{top:19%}
+  .field-formation-self{bottom:24%}
+  .field-effect-pending{top:17%;max-width:54vw;font-size:9px;padding:4px 8px}
+  .field-play-dialog{padding:14px}
+}
+@media(max-height:680px){
+  .field-card-detail-art{height:77px}
+  .field-card-detail{max-height:43vh}
+  .field-formation-enemy{top:19%}
+  .field-formation-self{bottom:24%}
+  .field-mana-panel{bottom:8px}
+  .field-effect-caption{bottom:27%}
+}
+@media(prefers-reduced-motion:reduce){
+  .field-hand-card,.field-unit-zone{transition:none}
+  .field-effect-beam line{stroke-dasharray:none}
+}
