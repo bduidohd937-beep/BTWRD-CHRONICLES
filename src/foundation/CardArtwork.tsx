@@ -152,7 +152,7 @@ function motifPath(motif: Motif): ReactNode {
   }
 }
 
-export default function CardArtwork({ card }: { card: ChronicleCard }) {
+export default function CardArtwork({ card }: { card: Pick<ChronicleCard, "id" | "type"> }) {
   const motif = MOTIFS[card.id] ?? (card.type === "마법" ? "sun" : "shield");
 
   return (
