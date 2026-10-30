@@ -42,6 +42,7 @@ function TeamHud({player,owner,battle,chosenCard,chosenUnit,onPlace,onStrike,onC
         const canHitUnit=isTarget&&!!unit;
         const canDeploy=owner===battle.active&&chosenCard!==null&&canPlayCard(battle,chosenCard,i);
         const canSelect=owner===battle.active&&!!unit&&unit.canAttack&&unit.stance==='attack'&&!battle.pendingRetreat&&!battle.discarding;
+        const canSpellTarget=!!unit&&!!targetSpell&&canDeploy;
         const canRetreat=!!battle.pendingRetreat&&battle.pendingRetreat.owner===owner&&wall>0&&!unit&&battle.pendingRetreat.from!==i;
         return <div key={i} className={`arena-lane ${canDeploy?'arena-lane-deploy':''}`}>
           <button type="button" className={`arena-wall ${wall===0?'arena-wall-down':''} ${canHitWall?'arena-target':''}`}
@@ -51,9 +52,9 @@ function TeamHud({player,owner,battle,chosenCard,chosenUnit,onPlace,onStrike,onC
             <span className="arena-wall-track"><i style={{width:`${wall/MAX_WALL[i]*100}%`}}/></span>
           </button>
           {unit?<button type="button"
-            className={`arena-unit ${canSelect?'arena-ready':''} ${canHitUnit?'arena-target':''} ${chosenUnit?.lane===i&&active?'arena-selected':''}`}
-            disabled={!(canSelect||canHitUnit)}
-            onClick={()=>owner===battle.active?onChooseUnit(i):onStrike(i,0)}
+            className={`arena-unit ${canSelect?'arena-ready':''} ${canHitUnit||canSpellTarget?'arena-target':''} ${chosenUnit?.lane===i&&active?'arena-selected':''}`}
+            disabled={!(canSelect||canHitUnit||canSpellTarget)}
+            onClick={()=>owner===battle.active?(canSpellTarget?onPlace(i):onChooseUnit(i)):onStrike(i,0)}
             title={unit.stance==='defense'?'수비 표시 · 받는 전투 피해 반감':'공격 표시'}>
             <span className="arena-unit-name">{unit.stance==='defense'?'🛡':'⚔'} {unit.name}</span>
             <small>ATK {unit.atk} · HP {unit.hp}/{unit.maxHp} · {unit.canAttack&&unit.stance==='attack'?'공격 가능':unit.stance==='defense'?'수비':'대기'}</small>
@@ -99,7 +100,10 @@ export default function BattleApp({battle,setBattle}:{
     }
     if(globalSpell(card)){
       const next=playCard(battle,i,0);
-      if(next!==battle){setBattle(next);setMessage(`${card.name} 사용`);}
+      if(next!==battle){
+        setBattle(next);setChosenCard(null);setChosenUnit(null);
+        setMessage(`${card.name} 사용`);
+      }
       return;
     }
     setChosenUnit(null);
