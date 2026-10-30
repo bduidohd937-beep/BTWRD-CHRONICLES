@@ -98,6 +98,7 @@ export default function BattleApp({battle,setBattle}:{
   const [chosenCard,setChosenCard]=useState<number|null>(null);
   const [chosenUnit,setChosenUnit]=useState<ChosenUnit|null>(null);
   const [stance,setStance]=useState<Stance>('attack');
+  const [guardSide,setGuardSide]=useState<0|2>(0);
   const [show3d,setShow3d]=useState(true);
   const [message,setMessage]=useState('');
   const actingCard=chosenCard===null?null:player.hand[chosenCard];
@@ -112,7 +113,7 @@ export default function BattleApp({battle,setBattle}:{
       return;
     }
     const card=player.hand[i];
-    if(!card||battle.pendingRetreat||battle.winner)return;
+    if(!card||battle.pendingRetreat||battle.pendingEffect||battle.winner)return;
     if(card.type==='마법'&&!SUPPORTED_SPELLS.has(card.id)){
       setMessage('해당 마법은 아직 구현되지 않았습니다.');
       return;
@@ -137,29 +138,35 @@ export default function BattleApp({battle,setBattle}:{
       return;
     }
     if(chosenCard===null||lane<0)return;
-    const next=playCard(battle,chosenCard,lane,stance);
+    const next=playCard(battle,chosenCard,lane,stance,guardSide);
     if(next===battle){setMessage('그 전선에 놓을 수 없습니다. 마나와 빈칸을 확인하세요.');return;}
-    setBattle(next);setChosenCard(null);setMessage('카드 사용 완료!');
+    setBattle(next);setChosenCard(null);
+    setMessage(next.pendingEffect?'소환 능력이 발동했습니다. 빛나는 대상 유닛을 클릭하세요.':'카드 사용 완료!');
   };
+
 
   const strike=(lane:number,target:number|null)=>{
     if(chosenUnit===null)return;
-    if(chosenUnit.lane!==lane){
-      setMessage('기본 공격은 같은 전선의 대상만 선택할 수 있습니다.');
-      return;
-    }
-    const next=attackUnit(battle,chosenUnit.lane,chosenUnit.index,target);
+    const next=attackUnit(battle,chosenUnit.lane,chosenUnit.index,target,lane);
     if(next===battle){
-      setMessage('적 유닛이 있으면 먼저 유닛을 공격해야 합니다. 붕괴한 성벽 공격도 불가합니다.');
+      setMessage('적법한 대상을 선택하세요. 같은 전선의 유닛이 우선이며, 인접 도발이 차단할 수 있습니다.');
       return;
     }
-    setBattle(next);setChosenUnit(null);setMessage(target===null?'성벽 공격 성공!':'유닛 공격 해결!');
+    setBattle(next);setChosenUnit(null);
+    setMessage(target===null?'성벽 공격 성공!':'유닛 공격 해결!');
   };
 
+  const resolveEffect=(lane:number)=>{
+    const next=resolvePendingEffect(battle,lane);
+    if(next===battle){setMessage('소환 능력을 적용할 유효한 대상이 아닙니다.');return;}
+    setBattle(next);
+    setChosenCard(null);setChosenUnit(null);
+    setMessage('소환 능력 적용 완료!');
+  };
   const chooseUnit=(lane:number)=>{
     setChosenCard(null);
     setChosenUnit(chosenUnit?.lane===lane?null:{lane,index:0});
-    setMessage(chosenUnit?.lane===lane?'유닛 선택 해제':player.lanes[lane][0]?.stance==='defense'?'수비 표시입니다. 아래 표시 전환 버튼으로 공격 표시로 바꿀 수 있어요.':'같은 전선의 적 유닛 또는 성벽을 선택하세요.');
+    setMessage(chosenUnit?.lane===lane?'유닛 선택 해제':player.lanes[lane][0]?.stance==='defense'?'수비 표시입니다. 아래 표시 전환 버튼으로 공격 표시로 바꿀 수 있어요.':'빛나는 적 유닛 또는 성벽을 공격하세요. 인접 도발도 공격할 수 있습니다.');
   };
 
   const runTurn=()=>{
@@ -194,13 +201,14 @@ export default function BattleApp({battle,setBattle}:{
           {show3d?'◈ 3D 전장 ON':'▤ 2D 전장'}
         </button>
         <button type="button" onClick={runTurn}
-          disabled={!!battle.winner||!!battle.pendingRetreat}>
+          disabled={!!battle.winner||!!battle.pendingRetreat||!!battle.pendingEffect}>
           {battle.discarding?'카드 버리기 중':'턴 종료'} 
         </button>
       </div>
     </header>
     <div className="combat-guide" role="status">
-      {battle.pendingRetreat?`${battle.players[battle.pendingRetreat.owner].name} 성벽이 무너졌습니다. 빈 활성 전선으로 유닛을 퇴각시키세요.`:
+      {battle.pendingEffect?'소환 효과 대상을 선택하세요. 빛나는 유닛을 클릭하면 능력이 적용됩니다.':
+       battle.pendingRetreat?`${battle.players[battle.pendingRetreat.owner].name} 성벽이 무너졌습니다. 빈 활성 전선으로 유닛을 퇴각시키세요.`:
        battle.discarding?'손패를 직접 선택해 7장 이하로 줄이고 다시 턴 종료를 누르세요.':
        message||'① 손패 카드 선택 → 빈 전선 소환 · ② 녹색 유닛 선택 → 적 유닛 또는 성벽 클릭 · ③ 턴 종료'}
     </div>
@@ -209,14 +217,14 @@ export default function BattleApp({battle,setBattle}:{
       <div className="combat-arena-overlay">
         <TeamHud player={battle.players[1]} owner={1} battle={battle}
           chosenCard={chosenCard} chosenUnit={chosenUnit}
-          onPlace={place} onStrike={strike} onChooseUnit={chooseUnit}/>
+          onPlace={place} onStrike={strike} onChooseUnit={chooseUnit} onResolveEffect={resolveEffect}/>
         <div className="combat-arena-center">
           <span>✦ {show3d?'LIVE 3D BATTLEFIELD':'TACTICAL BATTLEFIELD'} ✦</span>
           <small>위: B · 아래: A · 좌/중/우 3전선</small>
         </div>
         <TeamHud player={battle.players[0]} owner={0} battle={battle}
           chosenCard={chosenCard} chosenUnit={chosenUnit}
-          onPlace={place} onStrike={strike} onChooseUnit={chooseUnit}/>
+          onPlace={place} onStrike={strike} onChooseUnit={chooseUnit} onResolveEffect={resolveEffect}/>
       </div>
     </div>
     {battle.pendingRetreat&&<div className="combat-retreat-banner">
@@ -231,6 +239,11 @@ export default function BattleApp({battle,setBattle}:{
     </div>}
     <div className="combat-hand-header">
       <strong>🃏 {player.name} 손패 <small>{player.hand.length}장</small></strong>
+      {actingCard?.type==='유닛'&&actingCard.text.includes('도발')&&<div className="combat-stance-choice">
+        <span>중앙 도발 보호</span>
+        <button aria-pressed={guardSide===0} className={guardSide===0?'active':''} onClick={()=>setGuardSide(0)}>← 좌측</button>
+        <button aria-pressed={guardSide===2} className={guardSide===2?'active':''} onClick={()=>setGuardSide(2)}>우측 →</button>
+      </div>}
       {!battle.discarding&&<div className="combat-stance-choice">
         <span>소환 표시</span>
         <button aria-pressed={stance==='attack'} className={stance==='attack'?'active':''}
@@ -242,7 +255,7 @@ export default function BattleApp({battle,setBattle}:{
     <div className={`combat-hand-v033 ${battle.discarding?'combat-discard-hand':''}`}>
       {player.hand.map((card,i)=>{
         const disabled=!battle.discarding&&(!!battle.winner||!!battle.pendingRetreat||
-          player.mana<card.cost||(card.type==='마법'&&!SUPPORTED_SPELLS.has(card.id)));
+          !!battle.pendingEffect||player.mana<card.cost||(card.type==='마법'&&!SUPPORTED_SPELLS.has(card.id)));
         const rarity=rarityOf(card.rarity as Rarity).color;
         return <button key={i} type="button" className={`battle-hand-card ${chosenCard===i?'chosen':''}`}
           style={{'--rarity':rarity} as CSSProperties} disabled={disabled}
@@ -260,8 +273,8 @@ export default function BattleApp({battle,setBattle}:{
       <summary>📜 전투 기록 · 현재 시험 규칙 <span>펼치기</span></summary>
       <div className="combat-details-inner">
         <div><strong>최근 전투 기록</strong>{battle.log.slice(0,10).map((line,i)=><p key={i}>{line}</p>)}</div>
-        <p><strong>V0.3.3 기본 구현:</strong> 3성벽, 1전선 1유닛, 수비 표시/피해 반감, 같은 전선 유닛 우선, 돌격 기병, 간이 마법 5종, 턴별 드로우·손패 선택 버리기·긴급 퇴각 선택.</p>
-        <p><strong>미구현:</strong> 체인/마법 속도, 정식 마법 존, 계승, 인접 도발, 고급 우회 공성, 일부 소환 효과, ??? 합성 소환. 3D 모델은 임시 절차적 모델입니다.</p>
+        <p><strong>V0.4 시험 구현:</strong> 3성벽, 1전선 1유닛, 수비 피해 반감, 같은 전선 유닛 우선, 측면 도발의 중앙 보호와 중앙 도발의 좌/우 선택, 대상 선택형 소환 효과, 돌격 기병, 간이 마법 5종, 마법 존 빈 슬롯, 손패 선택 버리기.</p>
+        <p><strong>미구현:</strong> 체인/마법 속도, 정식 지속·장착마법과 마법 존 점유, 계승/합성, 우회 공성 A/B/C, 일부 유닛 고유 능력. 3D 모델은 임시 절차적 모델입니다.</p>
       </div>
     </details>
   </section>;
