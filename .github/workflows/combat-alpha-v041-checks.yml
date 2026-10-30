@@ -1,0 +1,25 @@
+name: Combat Alpha V0.4.1 — independent battle scene checks
+on:
+  push:
+    branches:
+      - feature/combat-alpha-v041-battle-scene
+  workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Battle, collection and scene regression tests
+        run: npm run test
+      - name: TypeScript check and production build
+        run: npm run build
