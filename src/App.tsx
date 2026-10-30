@@ -87,7 +87,7 @@ export default function App(){
         <span className="brand-emblem" aria-hidden="true">✦</span>
         <div><span className="eyebrow">BREAK THE WALLS · ROLL THE DICE</span>
           <h1>BTWRD <span>CHRONICLES</span></h1>
-          <div className="version">CARD COLLECTION · 3D COMBAT ALPHA V0.4.1</div>
+          <div className="version">CARD COLLECTION · 3D COMBAT ALPHA V0.5.0</div>
         </div>
       </div>
       <div className="gem-balance" aria-label={developerMode?'개발 모드: 무한 GEM 사용 가능':`보유 GEM ${game.gem.toLocaleString()}개`}>
