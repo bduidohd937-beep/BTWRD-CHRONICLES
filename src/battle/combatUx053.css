@@ -1,0 +1,366 @@
+/* BTWRD V0.5.3 — user-playtested flow and readability corrections.
+   Overrides remain battle-scoped: lobby, gacha and archive are unchanged. */
+
+/* styles.css has a broad "aside" grid rule; reset it explicitly. */
+.battle-field-stage .field-card-detail{
+  display:grid;
+  grid-template-columns:minmax(0,108px) minmax(0,1fr);
+  grid-template-rows:auto auto minmax(0,1fr) auto auto;
+  align-content:start;
+  column-gap:12px;
+  row-gap:8px;
+  width:clamp(294px,24vw,374px);
+  max-height:min(67vh,530px);
+  margin:0;
+  padding:12px;
+  border:1px solid #947eab;
+  border-top:2px solid var(--detail-accent,#e3be86);
+  overflow:auto;
+  scrollbar-width:thin;
+  background:linear-gradient(150deg,#1b1729f4,#261d33ef);
+}
+.battle-field-stage .field-card-detail-top{
+  grid-column:1/-1;
+  margin:0;
+  min-width:0;
+}
+.battle-field-stage .field-card-detail-art{
+  grid-column:1;
+  grid-row:2/span 2;
+  width:108px;
+  height:144px;
+  min-width:0;
+  max-width:100%;
+}
+.battle-field-stage .field-card-detail h2{
+  grid-column:2;
+  grid-row:2;
+  align-self:end;
+  min-width:0;
+  margin:0;
+  padding:0;
+  font-size:clamp(13px,1.1vw,17px);
+  line-height:1.4;
+  white-space:normal;
+  word-break:keep-all;
+  overflow-wrap:anywhere;
+}
+.battle-field-stage .field-card-detail-stats{
+  grid-column:2;
+  grid-row:3;
+  min-width:0;
+  align-self:start;
+  align-content:start;
+  gap:5px;
+  margin:0;
+}
+.battle-field-stage .field-card-detail-stats span{
+  white-space:nowrap;
+  font-size:11px;
+  padding:4px 6px;
+}
+.battle-field-stage .field-card-detail-effect,
+.battle-field-stage .field-card-detail-keywords,
+.battle-field-stage .field-card-detail-note{
+  grid-column:1/-1;
+  min-width:0;
+  width:100%;
+  word-break:keep-all;
+  overflow-wrap:anywhere;
+}
+.battle-field-stage .field-card-detail-effect{
+  border-top:1px solid #6c5b7b;
+  padding-top:8px;
+  margin:0;
+}
+.battle-field-stage .field-card-detail-effect strong{font-size:12px}
+.battle-field-stage .field-card-detail-effect p{
+  display:block;
+  width:100%;
+  font-size:12px;
+  line-height:1.75;
+  white-space:normal;
+  margin:5px 0;
+}
+.battle-field-stage .field-card-detail-keywords{
+  margin:0;
+  padding:8px 10px;
+}
+.battle-field-stage .field-card-detail-keywords p{
+  margin:3px 0;
+  font-size:11px;
+  line-height:1.6;
+  white-space:normal;
+}
+.battle-field-stage .field-card-detail-empty{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  width:clamp(220px,19vw,286px);
+  max-height:none;
+  padding:12px 14px;
+  border:1px dashed #8b79a3;
+  border-top:2px solid #b39ccb;
+  margin:0;
+}
+.battle-field-stage .field-card-detail-empty small{
+  font-size:11px;
+  line-height:1.55;
+  white-space:normal;
+}
+.battle-field-stage .field-mana-panel{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  grid-template-columns:none;
+  align-items:stretch;
+  width:clamp(206px,17.5vw,288px);
+  padding:11px 12px;
+  margin:0;
+  border:1px solid #7198bc;
+  bottom:clamp(34px,5vh,62px);
+  right:clamp(9px,1.6vw,25px);
+  min-width:0;
+}
+.battle-field-stage .field-mana-panel-head{
+  display:flex;
+  flex-direction:row;
+  flex-wrap:nowrap;
+  justify-content:space-between;
+  width:100%;
+  min-width:0;
+  gap:8px;
+}
+.battle-field-stage .field-mana-panel-head strong{
+  white-space:nowrap;
+  font-size:13px;
+}
+.battle-field-stage .field-mana-panel-head span{
+  font-size:18px;
+  line-height:1.25;
+  white-space:nowrap;
+  flex:0 0 auto;
+  font-variant-numeric:tabular-nums;
+}
+.battle-field-stage .field-mana-pips{
+  display:grid;
+  grid-template-columns:repeat(var(--pip-count,2),minmax(0,1fr));
+  gap:3px;
+  margin:5px 0 0;
+  width:100%;
+  min-width:0;
+}
+.battle-field-stage .field-mana-pip{
+  width:100%;
+  max-width:none;
+  min-width:0;
+  height:24px;
+  font-size:clamp(10px,.95vw,15px);
+}
+.battle-field-stage .field-mana-panel>small{
+  margin:4px 0 0;
+  width:100%;
+  white-space:normal;
+  overflow-wrap:break-word;
+  font-size:11px;
+}
+
+/* Cards are still OVER the map, not in a reserved row; lift the fan far enough
+   that its lower edges/labels remain inside the browser viewport. */
+.battle-field-stage .field-hand-layer{
+  bottom:clamp(31px,4.9vh,62px);
+  height:clamp(122px,17.5vh,171px);
+  width:min(83vw,1100px);
+  max-width:calc(100% - 24px);
+}
+.battle-field-stage .field-hand-fan{
+  max-width:100%;
+  padding-bottom:3px;
+}
+.battle-field-stage .field-hand-card{
+  height:clamp(116px,15.8vh,154px);
+  flex-basis:clamp(78px,8vw,126px);
+  width:clamp(78px,8vw,126px);
+  margin-inline:-4px;
+  gap:2px;
+}
+.battle-field-stage .field-hand-card:hover:not(:disabled),
+.battle-field-stage .field-hand-card.field-hand-hovered{
+  transform:translateY(-35px) rotate(0deg) scale(1.11);
+}
+.battle-field-stage .field-hand-card.field-hand-selected{
+  transform:translateY(-27px) rotate(0deg) scale(1.06);
+}
+.battle-field-stage .field-hand-card-name{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-size:11px;
+}
+.battle-field-stage .field-hand-card-art{height:53%}
+
+/* Make the action prompt large and recognizable rather than a debug caption. */
+.battle-field-stage .field-action-guide{
+  z-index:24;
+  top:clamp(48px,5.9vh,65px);
+  min-width:270px;
+  max-width:min(57%,750px);
+  width:max-content;
+  padding:10px 16px;
+  border:1px solid #937aa4;
+  border-radius:10px;
+  background:linear-gradient(140deg,#2d213bdc,#201a30f2);
+  box-shadow:0 7px 20px #0805129a;
+  color:#f5d9a7;
+  font-size:13px;
+  font-weight:700;
+  line-height:1.5;
+}
+.battle-field-stage .field-guide-priority{
+  border:2px solid #e6b85f;
+  background:#48304ae8;
+  color:#ffe6b2;
+  box-shadow:0 0 18px #f3b95d6b;
+}
+.battle-field-stage .field-guide-turn-end{
+  border:1px solid #d6ba75;
+  background:#2e332ae5;
+  color:#e4ffcc;
+}
+.battle-field-stage .field-effect-pending{
+  position:absolute;
+  z-index:23;
+  top:40%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  width:min(410px,36vw);
+  max-width:90%;
+  padding:13px 18px;
+  text-align:center;
+  pointer-events:none;
+  border:2px solid #ffd283;
+  border-radius:15px;
+  background:linear-gradient(145deg,#3e2755ee,#21253aeb);
+  box-shadow:0 0 26px #ffc46e77,0 12px 30px #0a0617b5;
+}
+.battle-field-stage .field-effect-pending .field-effect-pending-tag{
+  font-size:12px;
+  letter-spacing:.5px;
+  font-weight:850;
+  color:#ffdb91;
+}
+.battle-field-stage .field-effect-pending strong{
+  font-size:20px;
+  line-height:1.25;
+  color:#fff2c7;
+}
+.battle-field-stage .field-effect-pending p{
+  font-size:12px;
+  line-height:1.6;
+  color:#f3e4ef;
+  word-break:keep-all;
+  margin:0;
+}
+.battle-field-stage .field-effect-target-hint{
+  color:#c2fff0;
+  font-size:12px;
+  font-weight:800;
+  line-height:1.5;
+}
+.battle-field-stage .field-effect-target-hint b{
+  color:#e8c89a;
+  font-weight:650;
+}
+.battle-field-stage .field-effect-pending .field-effect-decline{
+  pointer-events:auto;
+  margin-top:2px;
+  padding:6px 10px;
+  font-size:12px;
+  background:#302741;
+  border:1px solid #a892c6;
+}
+.battle-field-stage .field-end-turn-ready:not(:disabled){
+  border:2px solid #f5d58c;
+  background:#78602c;
+  color:#fff5c4;
+  box-shadow:0 0 0 3px #e7bc6859,0 0 23px #ffe09288;
+  animation:field-turn-ready-glow 1.4s ease-in-out infinite alternate;
+}
+@keyframes field-turn-ready-glow{
+  to{box-shadow:0 0 0 5px #f9d27b73,0 0 31px #f6dd91d8}
+}
+.battle-field-stage .field-play-dialog-actions:has(>button:only-child){
+  justify-content:center;
+}
+.battle-field-stage .field-play-dialog-actions>button:only-child{
+  flex:0 1 165px;
+}
+/* Clarity: selection of a summon stance IS the final confirmation. */
+.battle-field-stage .field-stance-picker button{
+  min-height:83px;
+}
+@media(max-width:1000px){
+  .battle-field-stage .field-card-detail{
+    width:276px;
+    grid-template-columns:90px minmax(0,1fr);
+    padding:10px;
+    column-gap:8px;
+    top:62px;
+  }
+  .battle-field-stage .field-card-detail-art{width:90px;height:120px}
+  .battle-field-stage .field-mana-panel{width:200px}
+  .battle-field-stage .field-action-guide{
+    max-width:55%;
+    font-size:12px;
+  }
+  .battle-field-stage .field-hand-layer{width:min(85vw,850px)}
+}
+@media(max-width:740px){
+  .battle-field-stage .field-card-detail{
+    width:225px;
+    max-height:48vh;
+    grid-template-columns:72px minmax(0,1fr);
+    padding:8px;
+    top:67px;
+  }
+  .battle-field-stage .field-card-detail-art{width:72px;height:96px}
+  .battle-field-stage .field-card-detail h2{font-size:12px}
+  .battle-field-stage .field-card-detail-effect p{font-size:11px}
+  .battle-field-stage .field-card-detail-keywords{display:none}
+  .battle-field-stage .field-mana-panel{
+    width:172px;bottom:120px;right:6px;padding:8px;
+  }
+  .battle-field-stage .field-mana-pip{height:18px}
+  .battle-field-stage .field-hand-layer{
+    width:96%;bottom:22px;
+  }
+  .battle-field-stage .field-hand-card{
+    flex-basis:clamp(65px,11vw,105px);
+    width:clamp(65px,11vw,105px);
+    margin-inline:-7px;
+    height:clamp(106px,14vh,132px);
+  }
+  .battle-field-stage .field-action-guide{
+    top:48px;min-width:0;max-width:65%;
+    padding:7px 10px;font-size:11px;
+  }
+  .battle-field-stage .field-effect-pending{
+    width:min(300px,70vw);top:42%;
+  }
+  .battle-field-stage .field-effect-pending strong{font-size:16px}
+}
+@media(max-height:650px){
+  .battle-field-stage .field-hand-layer{
+    bottom:25px;
+    height:116px;
+  }
+  .battle-field-stage .field-hand-card{height:104px}
+  .battle-field-stage .field-card-detail{max-height:49vh}
+  .battle-field-stage .field-effect-pending{top:42%}
+}
+@media(prefers-reduced-motion:reduce){
+  .battle-field-stage .field-end-turn-ready:not(:disabled){animation:none}
+}
