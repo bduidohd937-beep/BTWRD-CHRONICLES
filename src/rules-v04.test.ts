@@ -1,7 +1,7 @@
 import {describe,expect,it} from 'vitest';
 import {cards} from './data/cards';
 import {
-  attackUnit,canPlayCard,endTurn,eligibleEffectLanes,guardCovers,
+  activatePendingEffect,attackUnit,canPlayCard,endTurn,eligibleEffectLanes,guardCovers,
   legalAttackTargets,newBattle,playCard,resolvePendingEffect,
 } from './engine';
 import type {Unit} from './types';
@@ -75,8 +75,10 @@ describe('COMBAT V0.4 — on-summon target selection',()=>{
     b.players[1].lanes[2]=[troop('U001',{hp:1,maxHp:1})];
     b=playCard(b,0,0);
     expect(b.pendingEffect).toMatchObject({type:'enemy-damage',amount:1,owner:0});
-    expect(eligibleEffectLanes(b)).toEqual([2]);
+    expect(eligibleEffectLanes(b)).toEqual([]); // Must choose to activate first.
     expect(endTurn(b)).toBe(b);
+    b=activatePendingEffect(b);
+    expect(eligibleEffectLanes(b)).toEqual([2]);
     expect(resolvePendingEffect(b,0)).toBe(b);
     b=resolvePendingEffect(b,2);
     expect(b.pendingEffect).toBeUndefined();
@@ -90,6 +92,8 @@ describe('COMBAT V0.4 — on-summon target selection',()=>{
     b.players[0].hand[0]={...card('U004')};
     b.players[0].lanes[2]=[troop('U002',{hp:1,maxHp:4})];
     b=playCard(b,0,1);
+    expect(eligibleEffectLanes(b)).toEqual([]);
+    b=activatePendingEffect(b);
     expect(eligibleEffectLanes(b)).toEqual([2]);
     b=resolvePendingEffect(b,2);
     expect(b.players[0].lanes[2][0].hp).toBe(3);
@@ -112,6 +116,7 @@ describe('COMBAT V0.4 — on-summon target selection',()=>{
     b.players[1].lanes[2]=[troop('U001',{canAttack:true})];
     b=playCard(b,0,1);
     expect(b.pendingEffect?.type).toBe('enemy-disable');
+    b=activatePendingEffect(b);
     b=resolvePendingEffect(b,2);
     b=endTurn(b);
     expect(b.players[1].lanes[2][0].canAttack).toBe(false);
