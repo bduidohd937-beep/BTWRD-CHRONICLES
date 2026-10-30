@@ -229,7 +229,6 @@ describe('COMBAT ALPHA V0.5.3 streamlined flow',()=>{
     await act(async()=>first.click());
     await act(async()=>myLane().click());
     await act(async()=>clickButton('공격 표시'));
-    await act(async()=>clickButton('소환 확정'));
     await act(async()=>clickButton('턴 종료'));
     await act(async()=>clickButton('턴 종료'));
     const heal=Array.from(host.querySelectorAll('.field-hand-card'))
