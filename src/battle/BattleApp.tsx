@@ -2,7 +2,8 @@ import {useEffect,useState} from 'react';
 import type {BattleState,Card,Stance,Unit} from '../types';
 import {
   attackUnit,canPlayCard,changeStance,discardCard,endTurn,playCard,
-  resolveRetreat,resolvePendingEffect,SUPPORTED_SPELLS,
+  resolveRetreat,resolvePendingEffect,isPendingEffectOptional,skipPendingEffect,
+  eligibleEffectLanes,SUPPORTED_SPELLS,
 } from '../engine';
 import {CARD_MAP} from '../foundation/foundationCards';
 import Battlefield3D from '../graphics/Battlefield3D';
@@ -155,7 +156,7 @@ export default function BattleApp({battle,setBattle}:{
     setPendingPlay({index:chosenCard,lane,kind:card.type==='유닛'?'unit':'spell'});
     setSummonStance(null);
     setGuardSide(null);
-    setMessage(card.type==='유닛'?'공격 표시 또는 수비 표시를 선택하고 소환을 확정하세요.':
+    setMessage(card.type==='유닛'?'공격 또는 수비 표시를 누르면 즉시 소환합니다.':
       '선택한 대상과 효과를 확인한 다음 마법 발동을 확정하세요.');
   };
 
@@ -163,17 +164,21 @@ export default function BattleApp({battle,setBattle}:{
     setPendingPlay(null);
     setSummonStance(null);
     setGuardSide(null);
-    setMessage('확정을 취소했습니다. 마나는 소모되지 않았습니다.');
+    setMessage('소환/발동을 취소했습니다. 마나는 소모되지 않았습니다.');
   };
 
-  const confirmPending=()=>{
+  // Selecting the attack/defense stance is the final summon action.
+  // Only center taunt needs one further guard-direction choice.
+  const finishPending=(stanceChoice?:Stance,guardChoice?:0|2)=>{
     if(!pendingPlay||!pendingCard)return;
-    if(pendingPlay.kind==='unit'&&!summonStance){
-      setMessage('공격 또는 수비 표시를 선택해야 소환할 수 있습니다.');
+    const finalStance=stanceChoice??summonStance;
+    const finalGuard=guardChoice??guardSide;
+    if(pendingPlay.kind==='unit'&&!finalStance){
+      setMessage('공격 또는 수비 표시를 선택하세요.');
       return;
     }
-    if(needsCenterGuard(pendingCard,pendingPlay.lane)&&guardSide===null){
-      setMessage('중앙 도발이 보호할 방향을 선택해 주세요.');
+    if(needsCenterGuard(pendingCard,pendingPlay.lane)&&finalGuard===null){
+      setMessage('보호할 좌측 또는 우측 전선을 선택하세요.');
       return;
     }
     if(!canPlayCard(battle,pendingPlay.index,pendingPlay.lane)){
@@ -185,7 +190,7 @@ export default function BattleApp({battle,setBattle}:{
     const sourceOwner=battle.active;
     const target=battle.players[sourceOwner].lanes[pendingPlay.lane][0];
     const next=playCard(
-      battle,pendingPlay.index,pendingPlay.lane,summonStance??'attack',guardSide??undefined,
+      battle,pendingPlay.index,pendingPlay.lane,finalStance??'attack',finalGuard??undefined,
     );
     if(next===battle){
       setMessage('규칙상 사용이 거부되었습니다. 전선과 선택을 확인해 주세요.');
@@ -195,7 +200,7 @@ export default function BattleApp({battle,setBattle}:{
     setEffectTrace(next.pendingEffect?null:{
       title:original.name+(original.type==='유닛'?' 소환':' 발동'),
       details:original.type==='유닛'?
-        LANE_NAMES[pendingPlay.lane]+' 전선 · '+(summonStance==='defense'?'수비 표시':'공격 표시'):
+        LANE_NAMES[pendingPlay.lane]+' 전선 · '+(finalStance==='defense'?'수비 표시':'공격 표시'):
         globalSpell(original)?'전체 효과 · '+original.text:
         '대상 '+(target?.name??'유닛')+' · '+original.text,
       fromOwner:sourceOwner,fromLane:pendingPlay.lane,
@@ -211,8 +216,37 @@ export default function BattleApp({battle,setBattle}:{
     setSummonStance(null);
     setGuardSide(null);
     setMessage(next.pendingEffect?
-      original.name+'의 소환 효과 발동! 강조된 대상을 클릭하세요.':
+      '✨ '+original.name+'의 소환 효과! 빛나는 대상 카드를 선택하세요.':
       original.name+(original.type==='유닛'?' 소환 완료!':' 마법 해결 완료!'));
+  };
+
+  const chooseSummonStance=(stance:Stance)=>{
+    if(!pendingPlay||pendingPlay.kind!=='unit'||!pendingCard)return;
+    if(needsCenterGuard(pendingCard,pendingPlay.lane)){
+      setSummonStance(stance);
+      setMessage('이제 중앙 도발이 보호할 측면을 선택하세요.');
+      return;
+    }
+    finishPending(stance);
+  };
+
+  const chooseGuardSide=(side:0|2)=>{
+    if(pendingPlay?.kind==='unit'){
+      if(!summonStance)return;
+      finishPending(undefined,side);
+      return;
+    }
+    setGuardSide(side);
+  };
+
+  const declineOptionalEffect=()=>{
+    if(!battle.pendingEffect||!isPendingEffectOptional(battle))return;
+    const next=skipPendingEffect(battle);
+    if(next===battle)return;
+    setBattle(next);
+    setEffectTrace(null);
+    setEffectSourceLane(null);
+    setMessage('선택 소환 효과를 사용하지 않았습니다.');
   };
 
   const chooseUnit=(lane:number)=>{
@@ -324,11 +358,21 @@ export default function BattleApp({battle,setBattle}:{
     }
   };
 
+  const pendingOptional=isPendingEffectOptional(battle);
+  const effectLanes=eligibleEffectLanes(battle);
+  const playableHand=player.hand.some((_,i)=>
+    [0,1,2].some(lane=>canPlayCard(battle,i,lane)));
+  const canUnitAct=player.lanes.flat().some(unit=>unit.canAttack);
+  const turnEndReady=!battle.winner&&!battle.discarding&&!battle.pendingRetreat&&
+    !trigger&&!pendingPlay&&!playableHand&&!canUnitAct;
   const activePrompt=battle.winner?'🏆 '+battle.winner+' 승리!':
-    trigger?(effectCard?.name??'소환 유닛')+' 효과 발동 → 강조된 대상을 선택하세요.':
+    trigger?'✨ '+(effectCard?.name??'소환 유닛')+
+      (pendingOptional?' · 선택 효과':' · 필수 효과')+
+      ' — 빛나는 대상 카드를 클릭하세요.':
     battle.pendingRetreat?'성벽 붕괴! 빈 활성 전선으로 퇴각하거나 묘지로 보내세요.':
-    battle.discarding?'손패가 7장이 될 때까지 버릴 카드를 선택하세요.':
-    message||'카드 선택 → 전선 선택 → 표시/효과 확인 → 확정';
+    battle.discarding?'손패 '+player.hand.length+'장 · 7장이 될 때까지 버릴 카드를 선택하세요.':
+    turnEndReady?'✔ 지금 할 수 있는 행동을 모두 마쳤습니다. 빛나는 턴 종료 버튼을 누르세요.':
+    message||'카드 선택 → 전선 선택 → 공격/수비 표시를 눌러 소환';
 
   return <section className="combat-experience field-combat-experience" aria-label="3D 전장 카드 전투">
     <div className="battle-field-stage" data-layout="field-overlay" aria-label="3D 전장과 카드 슬롯">
@@ -346,12 +390,15 @@ export default function BattleApp({battle,setBattle}:{
           <button type="button" aria-pressed={show3d} onClick={()=>setShow3d(v=>!v)}>
             {show3d?'◈ 3D ON':'▤ 2D'}
           </button>
-          <button type="button" className="field-end-turn"
-            disabled={!!battle.winner||!!battle.pendingRetreat||!!trigger||!!pendingPlay}
-            onClick={finishTurn}>{battle.discarding?'버리기 중':'턴 종료'}</button>
+          <button type="button"
+            className={'field-end-turn'+(turnEndReady?' field-end-turn-ready':'')}
+            title={turnEndReady?'가능한 행동을 마쳤습니다. 다음 턴으로 이동하세요.':undefined}
+            disabled={!!battle.winner||!!battle.pendingRetreat||!!trigger||!!pendingPlay||!!battle.discarding}
+            onClick={finishTurn}>{battle.discarding?'카드 버리기 중':turnEndReady?'✦ 턴 종료':'턴 종료'}</button>
         </div>
       </div>
-      <div className="field-action-guide" role="status">{activePrompt}</div>
+      <div className={'field-action-guide'+(trigger?' field-guide-priority':'')+
+        (turnEndReady?' field-guide-turn-end':'')} role="status">{activePrompt}</div>
 
       <BattlefieldOverlay
         battle={battle} chosenCard={chosenCard} chosenUnit={chosenUnit}
@@ -360,10 +407,17 @@ export default function BattleApp({battle,setBattle}:{
         onInspect={setInspectedCard} onPreviewUnit={setHoveredUnit}/>
       <CombatCardInfo card={detailCard} unit={currentUnit} source={infoSource}/>
 
-      {trigger&&<div className="field-effect-pending">
-        <span>✦ 소환 효과 발동</span>
-        <strong>{effectCard?.name??trigger.sourceCardId}</strong>
-        <span>대상 선택 → 효과 적용</span>
+      {trigger&&<div className="field-effect-pending" role="status"
+        aria-label="소환 효과 대상 선택 안내">
+        <span className="field-effect-pending-tag">✦ 소환 효과 {pendingOptional?'선택 가능':'발동 필수'}</span>
+        <strong>✨ {effectCard?.name??trigger.sourceCardId}</strong>
+        <p>{effectCard?.text??'효과 대상을 선택하세요.'}</p>
+        <span className="field-effect-target-hint">
+          ↘ 빛나는 {trigger.type==='ally-heal'?'아군':'적'} 유닛을 클릭하세요
+          <b> · 대상 {effectLanes.length}곳</b>
+        </span>
+        {pendingOptional&&<button type="button" className="field-effect-decline"
+          onClick={declineOptionalEffect}>효과 사용 안 함</button>}
       </div>}
       {effectTrace&&!trigger&&!pendingPlay&&<EffectBeam trace={effectTrace}/>}
 
@@ -399,7 +453,7 @@ export default function BattleApp({battle,setBattle}:{
       {pendingPlay&&pendingCard&&<div className="field-play-backdrop" role="presentation">
         <div className="field-play-dialog" role="dialog" aria-modal="true"
           aria-label={pendingPlay.kind==='unit'?'소환 표시 선택':'마법 발동 확인'}>
-          <span className="field-play-stage">카드 선택 <b>→</b> 전선 선택 <b>→</b> {pendingPlay.kind==='unit'?'표시 선택':'효과 확인'}</span>
+          <span className="field-play-stage">카드 선택 <b>→</b> 전선 선택 <b>→</b> {pendingPlay.kind==='unit'?'표시 클릭 시 즉시 소환':'효과 확인'}</span>
           <strong>{pendingCard.name}</strong>
           <p>{pendingPlay.kind==='unit'?'소환 위치: '+LANE_NAMES[pendingPlay.lane]+' 전선':
             globalSpell(pendingCard)?'전체 적용 마법':'효과 대상: '+(player.lanes[pendingPlay.lane][0]?.name??'유닛')}</p>
@@ -408,24 +462,29 @@ export default function BattleApp({battle,setBattle}:{
           {pendingPlay.kind==='unit'&&<div className="field-stance-picker" role="group" aria-label="소환 표시 선택">
             <button type="button" className={summonStance==='attack'?'chosen stance-attack':'stance-attack'}
               aria-pressed={summonStance==='attack'}
-              onClick={()=>setSummonStance('attack')}>⚔ 공격 표시 <small>붉은색 · 기본 공격 가능 상태</small></button>
+              onClick={()=>chooseSummonStance('attack')}>⚔ 공격 표시 <small>클릭 즉시 소환 · 붉은색</small></button>
             <button type="button" className={summonStance==='defense'?'chosen stance-defense':'stance-defense'}
               aria-pressed={summonStance==='defense'}
-              onClick={()=>setSummonStance('defense')}>🛡 수비 표시 <small>푸른색 · 받는 전투 피해 반감</small></button>
+              onClick={()=>chooseSummonStance('defense')}>🛡 수비 표시 <small>클릭 즉시 소환 · 푸른색</small></button>
           </div>}
           {needsCenterGuard(pendingCard,pendingPlay.lane)&&<div className="field-guard-choice">
-            <span>중앙 도발이 보호할 측면</span>
-            <button type="button" aria-pressed={guardSide===0} onClick={()=>setGuardSide(0)}>← 좌측</button>
-            <button type="button" aria-pressed={guardSide===2} onClick={()=>setGuardSide(2)}>우측 →</button>
+            <span>{pendingPlay.kind==='unit'?
+              (summonStance?'보호할 측면을 선택하면 즉시 소환됩니다.':'공격/수비 선택 후 보호 방향을 정하세요.'):
+              '중앙 도발이 보호할 측면'}</span>
+            <button type="button" aria-pressed={guardSide===0}
+              disabled={pendingPlay.kind==='unit'&&!summonStance}
+              onClick={()=>chooseGuardSide(0)}>← 좌측</button>
+            <button type="button" aria-pressed={guardSide===2}
+              disabled={pendingPlay.kind==='unit'&&!summonStance}
+              onClick={()=>chooseGuardSide(2)}>우측 →</button>
           </div>}
           <div className="field-play-dialog-actions">
             <button type="button" onClick={cancelPending}>취소</button>
-            <button type="button" className="field-play-confirm"
-              disabled={(pendingPlay.kind==='unit'&&!summonStance)||
-                (needsCenterGuard(pendingCard,pendingPlay.lane)&&guardSide===null)}
-              onClick={confirmPending}>
-              {pendingPlay.kind==='unit'?'소환 확정':'마법 발동'}
-            </button>
+            {pendingPlay.kind==='spell'&&<button type="button" className="field-play-confirm"
+              disabled={needsCenterGuard(pendingCard,pendingPlay.lane)&&guardSide===null}
+              onClick={()=>finishPending()}>
+              마법 발동
+            </button>}
           </div>
         </div>
       </div>}
