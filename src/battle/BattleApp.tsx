@@ -37,11 +37,11 @@ function TeamHud({player,owner,battle,chosenCard,chosenUnit,onPlace,onStrike,onC
       {player.lanes.map((lane,i)=>{
         const unit=lane[0];
         const wall=player.walls[i];
-        const isTarget=owner!==battle.active&&chosenUnit?.lane===i;
+        const isTarget=owner!==battle.active&&chosenUnit?.lane===i&&battle.players[battle.active].lanes[i][chosenUnit.index]?.stance==='attack';
         const canHitWall=isTarget&&wall>0&&!unit;
         const canHitUnit=isTarget&&!!unit;
         const canDeploy=owner===battle.active&&chosenCard!==null&&canPlayCard(battle,chosenCard,i);
-        const canSelect=owner===battle.active&&!!unit&&unit.canAttack&&unit.stance==='attack'&&!battle.pendingRetreat&&!battle.discarding;
+        const canSelect=owner===battle.active&&!!unit&&unit.canAttack&&!battle.pendingRetreat&&!battle.discarding;
         const canSpellTarget=!!unit&&!!targetSpell&&canDeploy;
         const canRetreat=!!battle.pendingRetreat&&battle.pendingRetreat.owner===owner&&wall>0&&!unit&&battle.pendingRetreat.from!==i;
         return <div key={i} className={`arena-lane ${canDeploy?'arena-lane-deploy':''}`}>
@@ -140,7 +140,7 @@ export default function BattleApp({battle,setBattle}:{
   const chooseUnit=(lane:number)=>{
     setChosenCard(null);
     setChosenUnit(chosenUnit?.lane===lane?null:{lane,index:0});
-    setMessage(chosenUnit?.lane===lane?'공격 선택 해제':'같은 전선의 적 유닛 또는 성벽을 선택하세요.');
+    setMessage(chosenUnit?.lane===lane?'유닛 선택 해제':player.lanes[lane][0]?.stance==='defense'?'수비 표시입니다. 아래 표시 전환 버튼으로 공격 표시로 바꿀 수 있어요.':'같은 전선의 적 유닛 또는 성벽을 선택하세요.');
   };
 
   const runTurn=()=>{
