@@ -105,6 +105,6 @@ export default function App(){
     </nav>
     {tab==='lobby'?<Lobby game={game} developerMode={developerMode} hasBattle={!!battle} onNavigate={navigate}/>:
      tab==='battle'?<div className="main-shell"><button onClick={()=>navigate('battle')}>전투 불러오기</button></div>:
-     <CollectionApp tab={tab} game={game} setGame={setGame} developerMode={developerMode}/>
+     <CollectionApp tab={tab} game={game} setGame={setGame} developerMode={developerMode}/>}
   </div>;
 }
