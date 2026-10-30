@@ -16,6 +16,7 @@ import './fieldOverlay.css';
 import './combatUx.css';
 import './combatUx053.css';
 import './combatUx054.css';
+import './combatUx0541.css';
 
 type ChosenUnit={lane:number;index:number};
 type PendingPlay={index:number;lane:number;kind:'unit'|'spell'};
@@ -494,7 +495,8 @@ export default function BattleApp({battle,setBattle}:{
         <button type="button" onClick={()=>retreat(null)}>묘지로 이동</button>
       </div>}
 
-      <div className="field-turn-actionbar" aria-label="전투 행동 및 턴 종료">
+      <div className="field-turn-actionbar field-turn-actionbar-side"
+        data-placement="right-center" aria-label="우측 중앙 전투 행동 및 턴 종료">
         <span className="field-turn-actionstatus">
           {battle.winner?'🏆 전투 완료':
             trigger?'✨ 소환 효과 선택 중':
