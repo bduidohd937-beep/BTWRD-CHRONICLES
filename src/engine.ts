@@ -132,7 +132,8 @@ const validPendingTarget=(state:BattleState,pending:PendingEffect,lane:number):b
 
 export const eligibleEffectLanes=(state:BattleState):number[]=>{
   const pending=state.pendingEffect;
-  if(!pending)return [];
+  // Target cards are NOT clickable until the player actively chooses '발동'.
+  if(!pending||pending.awaitingChoice!==false)return [];
   return [0,1,2].filter(lane=>validPendingTarget(state,pending,lane));
 };
 
@@ -146,20 +147,30 @@ const summonTrigger=(state:BattleState,owner:number,cardId:string):PendingEffect
   };
   const spec=specs[cardId];
   if(!spec)return undefined;
-  const effect:PendingEffect={...spec,owner,sourceCardId:cardId};
+  const effect:PendingEffect={...spec,owner,sourceCardId:cardId,awaitingChoice:true};
   return [0,1,2].some(lane=>validPendingTarget(state,effect,lane))?effect:undefined;
 };
 
 /**
- * An effect can be skipped only when its printed card text explicitly grants
- * a choice. Current summon effects are mandatory; do not silently turn them
- * into optional effects. This guard also supports future opt-in card text.
+ * Prototype V0.5.4 rule: every implemented on-summon effect is selectable,
+ * even if the printed card text is imperative. The original card text remains
+ * untouched; a future card can explicitly set pending.mandatory=true.
  */
 export function isPendingEffectOptional(state:BattleState):boolean {
-  const pending=state.pendingEffect;
-  if(!pending)return false;
-  const printedText=cardById(pending.sourceCardId)?.text??'';
-  return /(?:수 있다|선택하여 발동|발동해도 된다)/.test(printedText);
+  return !!state.pendingEffect&&!state.pendingEffect.mandatory;
+}
+
+export function isPendingEffectAwaitingChoice(state:BattleState):boolean {
+  return !!state.pendingEffect&&state.pendingEffect.awaitingChoice!==false;
+}
+
+/** Begin targeting after explicit player intent; do not spend further mana. */
+export function activatePendingEffect(state:BattleState):BattleState {
+  if(!state.pendingEffect||state.winner||!isPendingEffectAwaitingChoice(state))return state;
+  const next=structuredClone(state);
+  next.pendingEffect!.awaitingChoice=false;
+  next.log.unshift((cardById(next.pendingEffect!.sourceCardId)?.name??next.pendingEffect!.sourceCardId)+': 소환 효과 발동 선택 · 대상 지정 대기');
+  return next;
 }
 
 export function skipPendingEffect(state:BattleState):BattleState {
@@ -173,7 +184,7 @@ export function skipPendingEffect(state:BattleState):BattleState {
 
 export function resolvePendingEffect(state:BattleState,lane:number):BattleState{
   const pending=state.pendingEffect;
-  if(!pending||state.winner||!validPendingTarget(state,pending,lane))return state;
+  if(!pending||pending.awaitingChoice!==false||state.winner||!validPendingTarget(state,pending,lane))return state;
   const next=structuredClone(state);
   const target=targetPlayer(next,pending).lanes[lane][0];
   if(pending.type==='enemy-damage')target.hp-=pending.amount;
