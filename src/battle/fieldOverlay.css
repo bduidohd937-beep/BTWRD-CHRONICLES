@@ -1,0 +1,407 @@
+/* V0.5.0 — ONE battle field, with floating hand and directly clickable card slots.
+   New scene elements are explicitly scoped, so lobby/gacha/collection remain untouched. */
+.battle-scene-root .battle-scene-main{
+  padding:0;min-width:0;overflow:hidden;
+}
+.battle-scene-root .field-combat-experience{
+  display:block;position:relative;width:100%;height:100%;min-height:0;
+  overflow:hidden;margin:0;flex:1 1 0;
+}
+.battle-field-stage{
+  position:absolute;inset:0;isolation:isolate;overflow:hidden;
+  background:radial-gradient(ellipse at center,#29223a,#11101b 79%);
+  font-family:Inter,"Malgun Gothic",sans-serif;
+}
+.battle-field-stage>.battlefield-3d{
+  position:absolute;inset:0;z-index:0;pointer-events:none;
+}
+.battle-field-stage>.battlefield-3d canvas{
+  display:block;width:100%!important;height:100%!important;
+}
+.battle-field-stage .field-2d-background{
+  position:absolute;inset:0;z-index:0;
+  background:
+    repeating-linear-gradient(90deg,transparent 0,transparent calc(33.333% - 1px),#af8b5a55 calc(33.333% - 1px),#af8b5a55 33.333%),
+    radial-gradient(ellipse at center,#3d364f,#1a1526 75%);
+}
+.field-stage-vignette{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(180deg,#100c1fc7 0%,#1c122900 15%,#100d1f00 73%,#100d1fc9 100%);
+}
+.field-top-hud{
+  position:absolute;z-index:14;top:10px;left:17px;right:17px;
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  pointer-events:none;
+}
+.field-round,.field-top-actions{display:flex;gap:8px;align-items:center}
+.field-round{
+  border:1px solid #78648a;background:#181121d9;backdrop-filter:blur(6px);
+  border-radius:28px;padding:6px 11px;pointer-events:auto;white-space:nowrap;
+}
+.field-round strong{color:#f6dab2;font-size:12px}
+.field-round>span{color:#b7a5c6;font-size:10px;letter-spacing:.4px}
+.field-round .field-mana{font-size:13px;color:#99dbea;font-weight:900}
+.field-top-actions{pointer-events:auto}
+.field-top-actions button{
+  font-size:11px;line-height:1.25;min-height:29px;padding:5px 10px;
+  background:#21162bdc;border:1px solid #79638c;color:#f4e5f5;
+  white-space:nowrap;backdrop-filter:blur(5px);
+}
+.field-top-actions button[aria-pressed="true"]{
+  color:#d7e9fa;border-color:#8abdda;background:#24394ec9;
+}
+.field-top-actions .field-end-turn{
+  background:#604a47ed;color:#ffe2ac;border-color:#f0cf8f;font-weight:850;
+}
+.field-top-actions button:disabled{opacity:.4}
+.field-action-guide{
+  position:absolute;z-index:12;left:50%;top:46px;transform:translateX(-50%);
+  pointer-events:none;max-width:min(68%,670px);width:max-content;
+  padding:5px 14px;border-radius:0 0 14px 14px;
+  background:#21162abf;border:1px solid #5e486b;border-top:0;
+  color:#f4dbb2;font-size:11px;text-align:center;
+  text-shadow:0 1px 4px #090510;
+}
+/* Battlefield coordinates: no large permanent cards/info sidebar. */
+.field-layout-overlay{
+  position:absolute;inset:0;z-index:5;pointer-events:none;
+}
+.field-formation{
+  position:absolute;left:7.5%;right:7.5%;
+  display:flex;flex-direction:column;align-items:stretch;
+  pointer-events:none;
+}
+.field-formation-enemy{top:13%}
+.field-formation-self{bottom:23%}
+.field-formation-label{
+  position:absolute;left:0;right:0;top:-22px;
+  display:flex;justify-content:space-between;align-items:center;
+  gap:10px;color:#f8d9b9;font-size:10px;
+  opacity:.88;pointer-events:none;
+  text-shadow:0 1px 3px #000;
+}
+.field-formation-self .field-formation-label{
+  top:auto;bottom:-20px;color:#abe6df;
+}
+.field-formation-label strong{font-size:11px}
+.field-formation-label span{font-size:9px;color:#d3b9d9}
+.field-formation-columns{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:clamp(4px,1.4vw,18px);
+  width:100%;
+}
+.field-formation-column{
+  min-width:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:4px;position:relative;
+}
+.field-formation-enemy .field-wall-zone{order:1}
+.field-formation-enemy .field-magic-zone{order:2}
+.field-formation-enemy .field-unit-zone{order:3}
+.field-formation-self .field-unit-zone{order:1}
+.field-formation-self .field-magic-zone{order:2}
+.field-formation-self .field-wall-zone{order:3}
+.field-formation-enemy .field-ready-marker,
+.field-formation-self .field-ready-marker{display:none}
+.field-wall-zone{
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  width:min(148px,100%);min-height:29px;position:relative;
+  border-radius:7px;border:1px solid #9f777d;
+  background:linear-gradient(130deg,#532b3ccf,#2b2234e6);
+  color:#ffdcc9;padding:4px 8px 7px;font-size:10px;
+  pointer-events:auto;white-space:nowrap;
+}
+.field-wall-zone:disabled{opacity:1;cursor:default}
+.field-wall-symbol{font-size:15px;color:#ffcd9a}
+.field-wall-zone strong{color:#ffdc9d}
+.field-formation-self .field-wall-zone{
+  border-color:#649eae;color:#c6f3f2;
+  background:linear-gradient(120deg,#244450db,#252238d7);
+}
+.field-formation-self .field-wall-symbol,
+.field-formation-self .field-wall-zone strong{color:#abe2e9}
+.field-wall-meter{
+  position:absolute;left:5px;right:5px;bottom:1px;
+  height:2px;overflow:hidden;border-radius:4px;background:#211524;
+}
+.field-wall-meter i{
+  display:block;height:100%;background:#edc88b;
+  transition:width .3s;
+}
+.field-formation-self .field-wall-meter i{background:#7bd8d9}
+.field-magic-zone{
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  min-height:24px;width:min(142px,100%);
+  border:1px dashed #896ca3;border-radius:5px;
+  color:#d1b4ef;background:#302345a8;padding:3px 7px;
+  font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  pointer-events:none;
+}
+.field-magic-zone .field-zone-icon{font-size:13px}
+.field-magic-zone small{font-size:8px;opacity:.75}
+.field-zone-occupied{
+  border-style:solid;color:#f3dfad;background:#483c64d9;
+}
+.field-unit-zone{
+  display:flex;align-items:center;justify-content:center;
+  min-height:72px;height:72px;width:min(146px,100%);
+  border:1px solid #79658c;border-radius:9px;
+  padding:4px;background:linear-gradient(155deg,#36273db9,#181325e8);
+  color:#ddcbe9;pointer-events:auto;position:relative;
+  transform:perspective(400px) rotateX(13deg);
+  transition:filter .15s,box-shadow .15s,transform .15s;
+}
+.field-formation-self .field-unit-zone{
+  border-color:#6e9a9b;background:linear-gradient(155deg,#234249b9,#1b2237ec);
+}
+.field-unit-zone:disabled{opacity:1;cursor:default}
+.field-unit-zone:hover:not(:disabled){transform:perspective(400px) rotateX(0deg) translateY(-3px)}
+.field-unit-occupied{
+  display:grid;grid-template-columns:41% 1fr;align-items:center;gap:4px;
+  text-align:left;
+}
+.field-card-art{
+  width:100%;height:58px;display:block;overflow:hidden;
+  border-radius:5px;background:#191124;
+  border:1px solid #9e85ba5e;
+}
+.field-card-art .artwork{width:100%;height:100%}
+.field-card-art .artwork-motif{width:45px;height:45px}
+.field-card-art .artwork-ornament{width:60px;height:60px}
+.field-card-details{min-width:0;display:flex;flex-direction:column;gap:3px}
+.field-card-details strong{
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;font-size:11px;line-height:1.25;color:#ffe4ac;
+}
+.field-card-details small{font-size:9px;line-height:1.25;white-space:nowrap}
+.field-zone-empty-symbol{font-size:24px;line-height:1;color:#a08bb3}
+.field-unit-empty-label{display:none}
+.field-unit-zone small{font-size:9px}
+.field-unit-zone:not(.field-unit-occupied){
+  flex-direction:column;gap:1px;border-style:dashed;opacity:.85;
+}
+.field-zone-closed{filter:grayscale(.85);opacity:.45!important}
+.field-zone-target:not(:disabled){
+  border:2px solid #fce098!important;
+  background:#504151f0!important;
+  box-shadow:0 0 0 2px #f4c67744,0 0 18px #f4ce7a9c;
+  color:#ffefa7;
+  animation:field-glow 1s ease-in-out infinite alternate;
+  cursor:pointer;
+}
+@keyframes field-glow{
+  to{box-shadow:0 0 0 3px #f4c67766,0 0 30px #f4ce7ade}
+}
+.field-unit-ready:not(.field-zone-target){
+  border-color:#80dbb4;
+  box-shadow:0 0 0 1px #65dc9e8c;
+  cursor:pointer;
+}
+.field-unit-selected{
+  border-color:#ffe6ad!important;
+  box-shadow:0 0 0 2px #fce098c7,0 0 22px #eeb765ad;
+}
+.field-center-mark{
+  position:absolute;left:50%;top:49%;transform:translate(-50%,-50%);
+  color:#e1c484c0;text-shadow:0 1px 6px #100b17;
+  font-size:10px;letter-spacing:2.5px;pointer-events:none;
+}
+.field-shared-magic{
+  position:absolute;right:10px;top:49%;transform:translateY(-50%);
+  padding:6px 10px;border-radius:7px;
+  background:#2d2440b7;border:1px dashed #a58ab9;
+  color:#dec8f1;font-size:10px;pointer-events:none;
+}
+.field-shared-magic span{color:#9384a6;font-size:9px}
+/* The hand is an overlay on the same 3D field; no bottom row is reserved. */
+.field-hand-layer{
+  position:absolute;z-index:15;
+  bottom:clamp(3px,1.5vh,15px);left:50%;
+  transform:translateX(-50%);
+  width:min(94vw,1100px);
+  height:clamp(113px,17vh,169px);
+  display:flex;align-items:flex-end;justify-content:center;
+  pointer-events:none;
+}
+.field-hand-fan{
+  display:flex;justify-content:center;align-items:flex-end;
+  padding:0 12px 3px;
+  min-width:0;max-width:100%;
+  pointer-events:none;
+}
+.field-hand-card{
+  --fan-angle:0deg;--fan-y:0px;
+  display:flex;flex-direction:column;align-items:stretch;gap:3px;
+  flex:0 0 clamp(93px,8.4vw,134px);
+  width:clamp(93px,8.4vw,134px);
+  height:clamp(112px,16.4vh,164px);
+  padding:6px;
+  color:#f8e9e9;cursor:pointer;
+  background:linear-gradient(140deg,#3d2d49f0,#1a1425f4);
+  border:1px solid var(--rarity,#8c749c);border-radius:10px;
+  box-shadow:0 5px 15px #050309ad;
+  transform:translateY(var(--fan-y)) rotate(var(--fan-angle));
+  transform-origin:50% 100%;
+  transition:transform .2s,box-shadow .2s,filter .2s;
+  position:relative;
+  margin-inline:-4px;
+  pointer-events:auto;
+}
+.field-hand-card:disabled{opacity:.53;cursor:not-allowed;filter:saturate(.55)}
+.field-hand-card:hover:not(:disabled),
+.field-hand-card.field-hand-hovered:not(:disabled){
+  z-index:30;
+  transform:translateY(-47px) rotate(0deg) scale(1.14);
+  box-shadow:0 14px 32px #050208d5,0 0 18px var(--rarity);
+}
+.field-hand-card.field-hand-selected{
+  z-index:25;
+  transform:translateY(-35px) rotate(0deg) scale(1.06);
+  box-shadow:0 0 0 2px #ffe7a8,0 10px 26px #0009;
+}
+.field-hand-card.field-hand-discard{border-style:dashed;border-color:#e6a389}
+.field-hand-card-head{display:flex;justify-content:space-between;font-size:9px;color:var(--rarity);gap:4px}
+.field-hand-card-head strong{color:#9ddfe8;font-size:10px}
+.field-hand-card-art{height:55%;min-height:30px;overflow:hidden;border:1px solid #8c729b55;border-radius:6px}
+.field-hand-card-art .artwork{height:100%;width:100%}
+.field-hand-card-art .artwork-motif{height:48px;width:48px}
+.field-hand-card-art .artwork-ornament{height:66px;width:66px}
+.field-hand-card-name{font-size:11px;line-height:1.2;color:#ffdfad;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.field-hand-card>small{color:#c7b1ce;font-size:9px}
+.field-hand-discard-tag{
+  position:absolute;right:3px;top:26px;background:#a64141;
+  border-radius:5px;padding:2px 4px;color:white;font-size:9px;
+}
+.field-card-inspect{
+  position:absolute;bottom:calc(100% + 9px);left:50%;transform:translateX(-50%);
+  width:min(460px,82vw);
+  padding:8px 13px;
+  background:#1b1525e8;border:1px solid #9780ae;border-radius:10px;
+  color:#e2d2e9;text-align:center;
+  box-shadow:0 8px 20px #070510a6;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  pointer-events:none;
+}
+.field-card-inspect strong{font-size:13px;color:#ffdfaf}
+.field-card-inspect strong span{color:#93d9e7;font-size:11px}
+.field-card-inspect>span{font-size:11px;line-height:1.4}
+.field-hand-empty{padding:30px;color:#d5c1e3;font-size:12px}
+/* All actionable field helpers float in corners rather than consuming height. */
+.field-active-actions{position:absolute;inset:0;z-index:10;pointer-events:none}
+.field-info-pills{
+  display:flex;gap:5px;position:absolute;left:12px;bottom:12px;
+  pointer-events:none;
+}
+.field-info-pills span{
+  padding:5px 7px;border-radius:6px;border:1px solid #74618d;
+  color:#d3c1df;background:#1a1527c9;font-size:10px;
+}
+.field-action-buttons{
+  position:absolute;right:12px;bottom:12px;
+  display:flex;flex-direction:column;align-items:flex-end;gap:5px;
+  pointer-events:auto;
+}
+.field-action-group{
+  display:flex;align-items:center;gap:3px;padding:4px;border-radius:7px;
+  background:#201729d6;border:1px solid #77628a;
+}
+.field-action-group span{font-size:10px;color:#baa9ca;padding:0 5px}
+.field-action-group button{
+  padding:4px 7px;font-size:10px;background:#291d32;border-color:#716087;
+}
+.field-action-group button.active{background:#685249;border-color:#eec88e;color:#ffe9ba}
+.field-selected-unit-panel,.field-event-panel,.field-inspect-panel{
+  display:flex;gap:7px;align-items:center;flex-wrap:wrap;
+  position:absolute;left:50%;top:57%;transform:translate(-50%,-50%);
+  z-index:16;
+  padding:9px 12px;background:#21182df2;
+  border:1px solid #d4b47e;border-radius:12px;
+  box-shadow:0 12px 35px #07040cc0;
+  font-size:11px;color:#d9cbe8;
+}
+.field-selected-unit-panel strong,.field-event-panel strong{color:#f5d4a0}
+.field-selected-unit-panel button,.field-event-panel button{
+  padding:5px 8px;font-size:10px;
+}
+.field-event-panel{top:44%}
+.field-inspect-panel{
+  top:48%;left:15%;flex-direction:column;max-width:240px;align-items:flex-start;
+}
+.field-inspect-panel>button{align-self:flex-end;font-size:14px;padding:2px 6px}
+.field-inspect-panel>strong{color:#f3d9ae}
+.field-log-drawer{
+  position:absolute;z-index:50;right:12px;top:80px;bottom:24%;
+  width:min(350px,88%);overflow:auto;padding:13px;
+  border:1px solid #947dac;border-radius:12px;
+  background:#1b1428f3;box-shadow:0 18px 50px #000b;
+  font-size:11px;line-height:1.55;color:#d9cce0;
+}
+.field-log-title{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.field-log-title strong{color:#f5dfb6;font-size:14px}
+.field-log-title button{font-size:11px;padding:5px 8px}
+.field-log-drawer ol{padding-left:23px}
+.field-log-drawer li{padding:3px 0}
+.field-log-drawer p{color:#bea9ca}
+@media(max-width:850px){
+  .field-top-hud{top:6px;left:7px;right:7px;gap:5px}
+  .field-round{gap:4px;padding:4px 6px}
+  .field-round strong{font-size:10px}
+  .field-top-actions{gap:3px}
+  .field-top-actions button{padding:5px 6px;font-size:9px}
+  .field-action-guide{max-width:88%;top:39px;font-size:10px}
+  .field-formation{left:3%;right:3%}
+  .field-formation-enemy{top:14%}
+  .field-formation-self{bottom:24%}
+  .field-formation-label{font-size:9px}
+  .field-unit-zone{height:60px;min-height:60px;width:min(115px,100%)}
+  .field-card-art{height:48px}
+  .field-card-details strong{font-size:9px}
+  .field-card-details small{font-size:8px}
+  .field-wall-zone{min-height:25px;font-size:9px}
+  .field-magic-zone{min-height:20px;font-size:9px}
+  .field-shared-magic{right:4px;padding:4px 5px;font-size:8px}
+  .field-center-mark{font-size:8px;letter-spacing:1px}
+  .field-hand-card{flex-basis:clamp(79px,11vw,110px);width:clamp(79px,11vw,110px);margin-inline:-7px}
+  .field-info-pills{bottom:145px;left:6px}
+  .field-info-pills span{font-size:9px;padding:3px 4px}
+  .field-action-buttons{right:5px;bottom:142px}
+  .field-action-group span{font-size:9px}
+  .field-action-group button{padding:3px 5px;font-size:9px}
+}
+@media(max-width:560px){
+  .battle-scene-root .battle-scene-header{min-height:46px;flex-basis:46px}
+  .field-formation-enemy{top:17%}
+  .field-formation-self{bottom:24%}
+  .field-wall-name{display:none}
+  .field-unit-zone{height:54px;min-height:54px;padding:2px}
+  .field-card-art{height:44px}
+  .field-card-details strong{font-size:8px}
+  .field-card-details small{font-size:7px}
+  .field-unit-occupied{grid-template-columns:38% 1fr;gap:2px}
+  .field-magic-zone small{display:none}
+  .field-hand-layer{bottom:2px;width:100%}
+  .field-hand-card{flex-basis:clamp(65px,14vw,83px);width:clamp(65px,14vw,83px);margin-inline:-7px;padding:4px}
+  .field-hand-card-name{font-size:9px}
+  .field-hand-card-art{height:50%}
+  .field-round .field-mana{font-size:10px}
+  .field-top-actions button:first-child{display:none}
+  .field-action-guide{top:45px}
+  .field-selected-unit-panel,.field-event-panel{max-width:92%;justify-content:center}
+  .field-info-pills{bottom:125px}
+  .field-action-buttons{bottom:121px}
+  .field-action-group span{display:none}
+}
+@media(max-height:700px){
+  /* The whole field remains fixed-size; the hand still overlays it, never a separate row. */
+  .battle-scene-root .battle-scene-main{overflow:hidden!important}
+  .battle-scene-root .field-combat-experience{min-height:0!important;flex:1 1 0!important}
+  .field-formation-enemy{top:13%}
+  .field-formation-self{bottom:22%}
+  .field-hand-layer{height:115px}
+  .field-hand-card{height:106px}
+  .field-hand-card-art{height:45%}
+  .field-card-inspect{bottom:calc(100% + 3px)}
+}
+@media(prefers-reduced-motion:reduce){
+  .field-unit-zone,.field-hand-card{transition:none}
+  .field-zone-target:not(:disabled){animation:none}
+}
