@@ -56,8 +56,8 @@ export function rollRarity(minName?: Rarity): Rarity {
   return pool[pool.length - 1].name;
 }
 
-export function summonCards(game: GameSave, count: number, price: number): SummonOutcome | null {
-  if (!Number.isSafeInteger(count) || count < 1 || game.gem < price) return null;
+export function summonCards(game: GameSave, count: number, price: number, developerMode = false): SummonOutcome | null {
+  if (!Number.isSafeInteger(count) || count < 1 || (!developerMode && game.gem < price)) return null;
   const own = { ...game.own };
   const results: SummonOutcome["results"] = [];
   let refund = 0;
@@ -76,7 +76,7 @@ export function summonCards(game: GameSave, count: number, price: number): Summo
 
   return {
     next: {
-      gem: game.gem - price + refund,
+      gem: developerMode ? game.gem : game.gem - price + refund,
       pulls: game.pulls + count,
       own,
     },
