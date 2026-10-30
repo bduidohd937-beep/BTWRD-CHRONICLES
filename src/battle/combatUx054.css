@@ -1,0 +1,302 @@
+/* V0.5.4: reduce battlefield chrome, preserve the existing 3D surface and rules. */
+
+/* Inspector: tiny at rest; full card preview only on hover, selection or pin. */
+.battle-field-stage .field-inspector-shell{
+  position:absolute;z-index:26;
+  left:clamp(10px,1.2vw,22px);
+  top:clamp(63px,9.5vh,95px);
+  width:auto;max-width:min(370px,30vw);
+  pointer-events:none;
+}
+.battle-field-stage .field-inspector-tab{
+  pointer-events:auto;
+  display:flex;align-items:center;gap:8px;
+  min-height:34px;padding:7px 12px;
+  border:1px solid #85739f;border-radius:9px;
+  color:#f1dbbc;font-size:12px;font-weight:800;
+  background:#221b31d9;
+  backdrop-filter:blur(6px);
+  box-shadow:0 8px 18px #09061581;
+}
+.battle-field-stage .field-inspector-tab span:first-child{color:#e7cd8e}
+.battle-field-stage .field-inspector-tab span:last-child{margin-left:auto}
+.battle-field-stage .field-inspector-expanded{
+  width:clamp(290px,24vw,362px);
+  max-width:min(370px,30vw);
+  overflow:visible;
+  border:1px solid #877394;
+  border-radius:12px;
+  background:#20182deb;
+  backdrop-filter:blur(7px);
+  box-shadow:0 12px 24px #09061291;
+  pointer-events:auto;
+}
+.battle-field-stage .field-inspector-controls{
+  display:flex;gap:6px;align-items:center;
+  width:100%;min-width:0;min-height:32px;
+  padding:5px 8px;
+  border-bottom:1px solid #544764;
+}
+.battle-field-stage .field-inspector-controls>span{
+  flex:1;min-width:0;white-space:nowrap;
+  color:#e5cda4;font-size:10px;letter-spacing:.5px;font-weight:800;
+}
+.battle-field-stage .field-inspector-controls button{
+  flex:0 0 auto;min-height:23px;
+  font-size:10px;padding:4px 7px;border-radius:5px;
+  background:#31283c;border:1px solid #7a6890;color:#e7d8eb;
+}
+.battle-field-stage .field-inspector-controls button.field-inspector-pinned{
+  background:#5c492e;border-color:#d8b476;color:#ffe2a4;
+}
+.battle-field-stage .field-inspector-controls button:disabled{opacity:.45}
+.battle-field-stage .field-inspector-expanded .field-card-detail{
+  position:relative;top:auto;left:auto;
+  width:100%;max-width:none;
+  margin:0;
+  max-height:min(55vh,475px);
+  border:0;border-radius:0 0 12px 12px;border-top:0;
+  box-shadow:none;
+  background:transparent;
+  padding:9px 11px 11px;
+  pointer-events:auto;
+}
+.battle-field-stage .field-inspector-expanded .field-card-detail-empty{
+  width:100%;max-width:none;
+  min-height:90px;
+  margin:0;
+  padding:10px 12px;
+  border-radius:0 0 12px 12px;
+  border:0;
+}
+
+/* The primary action is just ABOVE the floating card fan, not across the map. */
+.battle-field-stage .field-turn-actionbar{
+  position:absolute;z-index:27;
+  left:50%;bottom:clamp(182px,20.5vh,225px);
+  transform:translateX(-50%);
+  display:flex;align-items:center;justify-content:center;
+  gap:10px;
+  width:max-content;max-width:min(520px,68%);
+  min-height:43px;
+  padding:5px 6px 5px 12px;
+  border:1px solid #9c815d;
+  border-radius:12px;
+  color:#eedabb;background:#201925eb;
+  box-shadow:0 9px 22px #060409a3;
+  backdrop-filter:blur(7px);
+  pointer-events:auto;
+}
+.battle-field-stage .field-turn-actionstatus{
+  min-width:0;max-width:270px;
+  font-size:11px;line-height:1.35;
+  color:#e5d8de;
+  font-weight:750;
+  word-break:keep-all;
+}
+.battle-field-stage .field-turn-actionbar .field-end-turn{
+  flex:0 0 auto;
+  min-width:114px;min-height:36px;
+  padding:8px 14px;
+  font-weight:900;font-size:13px;
+  border:1px solid #e4be79;
+  border-radius:9px;
+  color:#fff1d2;background:#554136;
+  cursor:pointer;
+}
+.battle-field-stage .field-turn-actionbar .field-end-turn:disabled{
+  color:#9e92a7;
+  background:#2a2433;border-color:#6d6279;opacity:.65;cursor:not-allowed;
+}
+.battle-field-stage .field-turn-actionbar .field-end-turn-ready:not(:disabled){
+  background:#79612d;border:2px solid #f6d38e;
+  color:#fff1bb;
+}
+.battle-field-stage .field-top-actions{
+  gap:6px;
+}
+.battle-field-stage .field-top-actions .field-end-turn{display:none}
+
+/* Compact effect-choice strip. Target highlighting begins only after activation. */
+.battle-field-stage .field-effect-pending{
+  position:absolute;top:clamp(103px,11.8vh,138px);left:50%;
+  transform:translateX(-50%);
+  z-index:28;
+  display:flex;flex-direction:row;align-items:center;justify-content:space-between;
+  gap:12px;
+  width:min(700px,61vw);max-width:calc(100% - 30px);
+  min-height:58px;
+  padding:9px 12px;
+  margin:0;
+  border:1px solid #e5be76;
+  border-radius:12px;
+  background:linear-gradient(125deg,#32263bed,#202538f0);
+  box-shadow:0 8px 20px #080613aa,0 0 12px #f4c47b55;
+  pointer-events:auto;
+}
+.battle-field-stage .field-effect-pending-copy{
+  flex:1;min-width:0;max-width:390px;
+  display:flex;flex-direction:column;align-items:flex-start;gap:3px;
+  text-align:left;
+}
+.battle-field-stage .field-effect-pending-copy strong{
+  color:#ffe2ad;font-size:13px;line-height:1.35;
+  white-space:normal;word-break:keep-all;
+}
+.battle-field-stage .field-effect-pending-copy>span{
+  color:#e6d2ed;font-size:11px;line-height:1.4;
+  max-width:100%;white-space:normal;word-break:keep-all;
+}
+.battle-field-stage .field-effect-pending-copy small{
+  color:#b6edec;font-size:10px;font-weight:800;line-height:1.4;
+}
+.battle-field-stage .field-effect-choice-actions{
+  display:flex;align-items:center;justify-content:flex-end;gap:6px;
+  flex-wrap:wrap;flex:0 0 auto;pointer-events:auto;
+}
+.battle-field-stage .field-effect-choice-actions button{
+  min-height:33px;padding:7px 10px;white-space:nowrap;
+  border-radius:8px;font-size:11px;font-weight:850;
+}
+.battle-field-stage .field-effect-choice-actions .field-effect-accept{
+  color:#281c2b;background:#e6c17d;border:1px solid #fff1c3;
+}
+.battle-field-stage .field-effect-choice-actions .field-effect-decline{
+  color:#e3d1eb;background:#33253f;border:1px solid #a48bb1;
+  margin:0;
+}
+
+/* Short event messages supplement the log and automatically disappear. */
+.battle-field-stage .field-recent-event{
+  position:absolute;z-index:22;left:50%;top:17%;
+  transform:translateX(-50%);
+  max-width:min(560px,55%);
+  width:max-content;min-width:180px;
+  padding:7px 12px;
+  background:#271e35e9;border:1px solid #baa078;border-radius:9px;
+  color:#f6dcba;font-size:11px;line-height:1.5;
+  text-align:center;word-break:keep-all;overflow-wrap:break-word;
+  box-shadow:0 6px 15px #090615a0;
+  pointer-events:none;
+}
+
+/* Root app's old 'aside' grid style was breaking every log letter into its
+   own narrow column. Use block layout and give list items their full width. */
+.battle-field-stage .field-log-drawer{
+  display:flex!important;
+  flex-direction:column!important;
+  grid-template-columns:none!important;
+  gap:0;
+  position:absolute;z-index:55;
+  top:70px;right:12px;bottom:clamp(156px,20vh,220px);
+  width:clamp(312px,27vw,455px);
+  max-width:calc(100% - 24px);
+  height:auto;
+  padding:0;
+  overflow:hidden;
+  min-width:0;
+  border:1px solid #9680aa;border-radius:12px;
+  background:#1c1529f5;color:#e3d8ea;
+  box-shadow:0 16px 40px #080510c0;
+  backdrop-filter:blur(6px);
+}
+.battle-field-stage .field-log-title{
+  position:sticky;top:0;z-index:2;
+  flex:0 0 auto;
+  display:flex;flex-direction:row;align-items:center;justify-content:space-between;
+  width:100%;min-width:0;min-height:43px;
+  padding:9px 12px;
+  background:#30253cf5;border-bottom:1px solid #776286;
+}
+.battle-field-stage .field-log-title strong{font-size:13px;white-space:nowrap}
+.battle-field-stage .field-log-title button{font-size:11px;white-space:nowrap}
+.battle-field-stage .field-log-drawer .field-log-items{
+  display:block;
+  list-style:decimal;
+  flex:1 1 auto;
+  min-width:0;width:100%;
+  max-height:100%;
+  overflow-x:hidden;overflow-y:auto;
+  margin:0;
+  padding:12px 12px 8px 33px;
+  scrollbar-width:thin;
+}
+.battle-field-stage .field-log-items li{
+  display:list-item;
+  width:100%;min-width:0;
+  margin:0;padding:6px 2px 7px 1px;
+  border-bottom:1px solid #564963;
+  color:#c3b1d1;font-size:11px;line-height:1.65;
+  list-style-position:outside;
+  white-space:normal!important;
+  word-break:keep-all!important;
+  overflow-wrap:anywhere!important;
+}
+.battle-field-stage .field-log-entry{
+  display:inline!important;
+  width:auto!important;
+  min-width:0;
+  color:#e5d6e9;
+  white-space:normal!important;
+  word-break:keep-all!important;
+  overflow-wrap:anywhere!important;
+}
+.battle-field-stage .field-log-note{
+  flex:0 0 auto;
+  font-size:10px;color:#ae9ac2;
+  line-height:1.45;
+  margin:0;padding:9px 12px;
+  border-top:1px solid #51405c;
+  white-space:normal;word-break:keep-all;
+}
+
+@media(max-width:1050px){
+  .battle-field-stage .field-inspector-shell{max-width:270px}
+  .battle-field-stage .field-inspector-expanded{width:270px;max-width:270px}
+  .battle-field-stage .field-effect-pending{width:min(610px,65vw)}
+  .battle-field-stage .field-turn-actionbar{max-width:62%}
+}
+@media(max-width:780px){
+  .battle-field-stage .field-inspector-shell{max-width:220px}
+  .battle-field-stage .field-inspector-expanded{width:220px;max-width:220px}
+  .battle-field-stage .field-turn-actionbar{
+    bottom:clamp(132px,18vh,175px);padding:5px 6px;max-width:73%;
+  }
+  .battle-field-stage .field-turn-actionbar .field-end-turn{
+    min-width:88px;font-size:11px;padding:7px 9px;
+  }
+  .battle-field-stage .field-turn-actionstatus{font-size:10px;max-width:170px}
+  .battle-field-stage .field-effect-pending{
+    top:100px;width:min(495px,79vw);gap:6px;
+    padding:8px;
+  }
+  .battle-field-stage .field-effect-choice-actions button{padding:5px 7px;font-size:10px}
+  .battle-field-stage .field-log-drawer{width:min(350px,85%);top:60px;bottom:130px}
+}
+@media(max-width:550px){
+  .battle-field-stage .field-inspector-shell{top:64px;left:5px}
+  .battle-field-stage .field-inspector-expanded{width:200px;max-width:200px}
+  .battle-field-stage .field-turn-actionbar{
+    bottom:132px;gap:5px;max-width:96%;min-height:35px;
+  }
+  .battle-field-stage .field-effect-pending{
+    left:50%;top:110px;min-height:0;
+    display:flex;flex-wrap:wrap;
+    width:95%;max-width:95%;
+  }
+  .battle-field-stage .field-effect-pending-copy{max-width:100%}
+  .battle-field-stage .field-effect-choice-actions{width:100%;justify-content:center}
+  .battle-field-stage .field-recent-event{max-width:78%;font-size:10px}
+}
+@media(max-height:680px){
+  .battle-field-stage .field-turn-actionbar{
+    bottom:clamp(132px,21vh,160px);min-height:34px;
+  }
+  .battle-field-stage .field-inspector-expanded .field-card-detail{
+    max-height:39vh;
+  }
+  .battle-field-stage .field-effect-pending{top:85px}
+}
+@media(prefers-reduced-motion:reduce){
+  .battle-field-stage .field-end-turn-ready:not(:disabled){animation:none}
+}
