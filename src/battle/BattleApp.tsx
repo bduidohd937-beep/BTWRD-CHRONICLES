@@ -133,6 +133,13 @@ export default function BattleApp({battle,setBattle}:{
     setInspectorExpanded(true);
   };
 
+  // Attack / heal beam is feedback, not a permanent overlay.
+  useEffect(()=>{
+    if(!effectTrace)return;
+    const timeout=window.setTimeout(()=>setEffectTrace(null),1900);
+    return ()=>window.clearTimeout(timeout);
+  },[effectTrace]);
+
   const chooseCard=(i:number)=>{
     if(battle.discarding){
       const next=discardCard(battle,i);
@@ -243,7 +250,7 @@ export default function BattleApp({battle,setBattle}:{
     setSummonStance(null);
     setGuardSide(null);
     setMessage(next.pendingEffect?
-      '✨ '+original.name+'의 소환 효과! 빛나는 대상 카드를 선택하세요.':
+      '✨ '+original.name+'의 소환 효과를 발동할지 선택하세요.':
       original.name+(original.type==='유닛'?' 소환 완료!':' 마법 해결 완료!'));
   };
 
