@@ -3,7 +3,7 @@ import type {BattleState,Card,Stance,Unit} from '../types';
 import {
   attackUnit,canPlayCard,changeStance,discardCard,endTurn,playCard,
   resolveRetreat,resolvePendingEffect,isPendingEffectOptional,skipPendingEffect,
-  eligibleEffectLanes,SUPPORTED_SPELLS,
+  eligibleEffectLanes,activatePendingEffect,isPendingEffectAwaitingChoice,SUPPORTED_SPELLS,
 } from '../engine';
 import {CARD_MAP} from '../foundation/foundationCards';
 import Battlefield3D from '../graphics/Battlefield3D';
@@ -11,9 +11,11 @@ import BattlefieldOverlay from './BattlefieldOverlay';
 import HandFan from './HandFan';
 import CombatCardInfo from './CombatCardInfo';
 import ManaMeter from './ManaMeter';
+import CardInspectorPanel from './CardInspectorPanel';
 import './fieldOverlay.css';
 import './combatUx.css';
 import './combatUx053.css';
+import './combatUx054.css';
 
 type ChosenUnit={lane:number;index:number};
 type PendingPlay={index:number;lane:number;kind:'unit'|'spell'};
@@ -77,6 +79,9 @@ export default function BattleApp({battle,setBattle}:{
   const [hoveredCard,setHoveredCard]=useState<Card|null>(null);
   const [hoveredUnit,setHoveredUnit]=useState<Unit|null>(null);
   const [inspectedCard,setInspectedCard]=useState<Card|null>(null);
+  const [pinnedCard,setPinnedCard]=useState<Card|null>(null);
+  const [inspectorExpanded,setInspectorExpanded]=useState(false);
+  const [eventToast,setEventToast]=useState<string|null>(null);
   const [effectTrace,setEffectTrace]=useState<EffectTrace|null>(null);
   const [effectSourceLane,setEffectSourceLane]=useState<number|null>(null);
   const [message,setMessage]=useState('');
@@ -87,12 +92,15 @@ export default function BattleApp({battle,setBattle}:{
   const trigger=battle.pendingEffect;
   const effectCard=trigger?CARD_MAP.get(trigger.sourceCardId):null;
   const currentUnit=hoveredUnit??selectedUnit;
-  const detailCard=hoveredCard??
+  const detailCard=pinnedCard??hoveredCard??
     (hoveredUnit?CARD_MAP.get(hoveredUnit.cardId):null)??
     effectCard??selectedHand??
     (selectedUnit?CARD_MAP.get(selectedUnit.cardId):null)??
     inspectedCard??null;
-  const infoSource=hoveredCard||selectedHand?'손패':effectCard?'발동':'전장';
+  const inspectorVisible=inspectorExpanded||!!pinnedCard||!!hoveredCard||
+    !!hoveredUnit||!!selectedHand||!!selectedUnit||!!trigger;
+  const infoSource=pinnedCard?'전장':hoveredCard||selectedHand?'손패':effectCard?'발동':'전장';
+  const effectAwaitingChoice=isPendingEffectAwaitingChoice(battle);
 
   useEffect(()=>{
     if(battle.turn===1&&battle.log.length===1&&battle.log[0].includes('전투 시작')){
@@ -103,10 +111,27 @@ export default function BattleApp({battle,setBattle}:{
       setGuardSide(null);
       setHoveredCard(null);
       setHoveredUnit(null);
+      setPinnedCard(null);
+      setInspectorExpanded(false);
       setEffectTrace(null);
       setEffectSourceLane(null);
     }
   },[battle]);
+
+  // Only the latest event is displayed briefly. The full battle log is never lost.
+  useEffect(()=>{
+    const latest=battle.log[0];
+    if(!latest||latest.startsWith('전투 시작')){setEventToast(null);return;}
+    setEventToast(latest);
+    const timeout=window.setTimeout(()=>setEventToast(null),2300);
+    return ()=>window.clearTimeout(timeout);
+  },[battle.log[0]]);
+
+  const inspectUnit=(card:Card)=>{
+    setInspectedCard(card);
+    setPinnedCard(card);
+    setInspectorExpanded(true);
+  };
 
   const chooseCard=(i:number)=>{
     if(battle.discarding){
@@ -130,6 +155,7 @@ export default function BattleApp({battle,setBattle}:{
     }
     setChosenUnit(null);
     setInspectedCard(card);
+    setPinnedCard(chosenCard===i?null:card);
     setEffectTrace(null);
     setPendingPlay(null);
     setSummonStance(null);
@@ -250,6 +276,13 @@ export default function BattleApp({battle,setBattle}:{
     setMessage('선택 소환 효과를 사용하지 않았습니다.');
   };
 
+  const chooseEffectActivation=()=>{
+    const next=activatePendingEffect(battle);
+    if(next===battle)return;
+    setBattle(next);
+    setMessage('✨ 효과 발동 선택! 빛나는 대상 유닛을 클릭하세요.');
+  };
+
   const chooseUnit=(lane:number)=>{
     setChosenCard(null);
     setPendingPlay(null);
@@ -257,6 +290,10 @@ export default function BattleApp({battle,setBattle}:{
     const next=chosenUnit?.lane===lane?null:{lane,index:0};
     setChosenUnit(next);
     const unit=player.lanes[lane][0];
+    if(unit?.cardId){
+      const card=CARD_MAP.get(unit.cardId);
+      if(card){setInspectedCard(card);setPinnedCard(card);}
+    }
     const oppositeWall=battle.players[1-battle.active].walls[lane];
     setMessage(next===null?'유닛 선택 취소':
       unit?.stance==='defense'?'수비 표시 유닛입니다. 행동권이 있으면 표시 전환을 할 수 있습니다.':
@@ -344,6 +381,8 @@ export default function BattleApp({battle,setBattle}:{
     setHoveredCard(null);
     setHoveredUnit(null);
     setInspectedCard(null);
+    setPinnedCard(null);
+    setInspectorExpanded(false);
     setMessage(next.discarding?'손패에서 버릴 카드를 직접 선택하세요.':'턴 교대!');
   };
 
@@ -368,8 +407,8 @@ export default function BattleApp({battle,setBattle}:{
     !trigger&&!pendingPlay&&!playableHand&&!canUnitAct;
   const activePrompt=battle.winner?'🏆 '+battle.winner+' 승리!':
     trigger?'✨ '+(effectCard?.name??'소환 유닛')+
-      (pendingOptional?' · 선택 효과':' · 필수 효과')+
-      ' — 빛나는 대상 카드를 클릭하세요.':
+      (effectAwaitingChoice?' · 효과 발동 또는 넘기기를 선택하세요.':
+        ' · 빛나는 대상 유닛을 클릭하세요.'):
     battle.pendingRetreat?'성벽 붕괴! 빈 활성 전선으로 퇴각하거나 묘지로 보내세요.':
     battle.discarding?'손패 '+player.hand.length+'장 · 7장이 될 때까지 버릴 카드를 선택하세요.':
     turnEndReady?'✔ 지금 할 수 있는 행동을 모두 마쳤습니다. 빛나는 턴 종료 버튼을 누르세요.':
@@ -391,11 +430,7 @@ export default function BattleApp({battle,setBattle}:{
           <button type="button" aria-pressed={show3d} onClick={()=>setShow3d(v=>!v)}>
             {show3d?'◈ 3D ON':'▤ 2D'}
           </button>
-          <button type="button"
-            className={'field-end-turn'+(turnEndReady?' field-end-turn-ready':'')}
-            title={turnEndReady?'가능한 행동을 마쳤습니다. 다음 턴으로 이동하세요.':undefined}
-            disabled={!!battle.winner||!!battle.pendingRetreat||!!trigger||!!pendingPlay||!!battle.discarding}
-            onClick={finishTurn}>{battle.discarding?'카드 버리기 중':turnEndReady?'✦ 턴 종료':'턴 종료'}</button>
+
         </div>
       </div>
       <div className={'field-action-guide'+(trigger?' field-guide-priority':'')+
@@ -406,19 +441,37 @@ export default function BattleApp({battle,setBattle}:{
         onPlay={chooseSlot} onStrike={strike} onChooseUnit={chooseUnit}
         onResolveEffect={resolveEffect} onRetreat={lane=>retreat(lane)}
         onInspect={setInspectedCard} onPreviewUnit={setHoveredUnit}/>
-      <CombatCardInfo card={detailCard} unit={currentUnit} source={infoSource}/>
+      <CardInspectorPanel card={detailCard} unit={currentUnit} source={infoSource}
+        open={inspectorVisible} pinned={!!pinnedCard}
+        onToggle={()=>setInspectorExpanded(value=>!value)}
+        onPin={()=>{
+          if(pinnedCard){setPinnedCard(null);}
+          else if(detailCard){setPinnedCard(detailCard);setInspectorExpanded(true);}
+        }}
+        onCollapse={()=>{setPinnedCard(null);setInspectorExpanded(false);setInspectedCard(null);}}/>
 
-      {trigger&&<div className="field-effect-pending" role="status"
+      {trigger&&<div className="field-effect-pending" role="region"
         aria-label="소환 효과 대상 선택 안내">
-        <span className="field-effect-pending-tag">✦ 소환 효과 {pendingOptional?'선택 가능':'발동 필수'}</span>
-        <strong>✨ {effectCard?.name??trigger.sourceCardId}</strong>
-        <p>{effectCard?.text??'효과 대상을 선택하세요.'}</p>
-        <span className="field-effect-target-hint">
-          ↘ 빛나는 {trigger.type==='ally-heal'?'아군':'적'} 유닛을 클릭하세요
-          <b> · 대상 {effectLanes.length}곳</b>
-        </span>
-        {pendingOptional&&<button type="button" className="field-effect-decline"
-          onClick={declineOptionalEffect}>효과 사용 안 함</button>}
+        <div className="field-effect-pending-copy">
+          <strong>✦ {effectCard?.name??trigger.sourceCardId} · 소환 효과</strong>
+          <span>{effectCard?.text??'소환 효과'}</span>
+          <small>{effectAwaitingChoice?'이번 소환 효과를 사용할까요?':
+            '↘ 빛나는 '+(trigger.type==='ally-heal'?'아군':'적')+' 유닛을 선택하세요 · '+effectLanes.length+'곳'}</small>
+        </div>
+        {effectAwaitingChoice?<div className="field-effect-choice-actions">
+          <button type="button" className="field-effect-accept" onClick={chooseEffectActivation}>
+            ✨ 효과 발동
+          </button>
+          {pendingOptional&&<button type="button" className="field-effect-decline"
+            onClick={declineOptionalEffect}>넘기기</button>}
+        </div>:<div className="field-effect-choice-actions">
+          {pendingOptional&&<button type="button" className="field-effect-decline"
+            onClick={declineOptionalEffect}>발동 취소</button>}
+        </div>}
+      </div>}
+      {eventToast&&!battle.winner&&!trigger&&!pendingPlay&&<div
+        className="field-recent-event" role="status" aria-live="polite">
+        {eventToast}
       </div>}
       {effectTrace&&!trigger&&!pendingPlay&&<EffectBeam trace={effectTrace}/>}
 
@@ -433,6 +486,25 @@ export default function BattleApp({battle,setBattle}:{
         <span>빛나는 빈 전선으로 유닛을 이동시키세요.</span>
         <button type="button" onClick={()=>retreat(null)}>묘지로 이동</button>
       </div>}
+
+      <div className="field-turn-actionbar" aria-label="전투 행동 및 턴 종료">
+        <span className="field-turn-actionstatus">
+          {battle.winner?'🏆 전투 완료':
+            trigger?'✨ 소환 효과 선택 중':
+            battle.pendingRetreat?'↪ 퇴각 처리 중':
+            battle.discarding?'손패 '+player.hand.length+'장 · 7장까지 버리기':
+            pendingPlay?'선택한 카드 처리 중':
+            turnEndReady?'✔ 남은 행동 없음':
+            canUnitAct?'⚔ 행동할 수 있는 유닛 있음':
+            playableHand?'✦ 사용 가능한 카드 있음':'턴 종료 가능'}
+        </span>
+        <button type="button" className={'field-end-turn'+(turnEndReady?' field-end-turn-ready':'')}
+          title={turnEndReady?'가능한 행동을 마쳤습니다. 다음 턴으로 이동하세요.':undefined}
+          disabled={!!battle.winner||!!battle.pendingRetreat||!!trigger||!!pendingPlay||!!battle.discarding}
+          onClick={finishTurn}>
+          {battle.discarding?'버리기 중':turnEndReady?'✦ 턴 종료':'턴 종료 →'}
+        </button>
+      </div>
 
       <div className="field-active-actions">
         <div className="field-info-pills">
@@ -492,9 +564,10 @@ export default function BattleApp({battle,setBattle}:{
 
       {showLog&&<aside className="field-log-drawer" aria-label="전투 기록 및 규칙 상태">
         <div className="field-log-title"><strong>📜 전투 기록</strong>
-          <button type="button" onClick={()=>setShowLog(false)}>닫기</button></div>
-        <ol>{battle.log.slice(0,18).map((line,i)=><li key={i}>{line}</li>)}</ol>
-        <p>지속/장착마법, 공용 필드 발동과 체인은 아직 구현되지 않았습니다. 현재 단순 마법만 시험용 즉시 해결입니다.</p>
+          <button type="button" onClick={()=>setShowLog(false)} aria-label="전투 기록 닫기">닫기 ✕</button></div>
+        <ol className="field-log-items">{battle.log.slice(0,40).map((line,i)=>
+          <li key={battle.turn+'-'+i}><span className="field-log-entry">{line}</span></li>)}</ol>
+        <p className="field-log-note">지속/장착마법, 공용 필드 발동과 체인은 아직 구현되지 않았습니다.</p>
       </aside>}
     </div>
   </section>;
