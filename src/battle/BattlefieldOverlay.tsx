@@ -184,10 +184,13 @@ function PlayerFormation({battle,owner,chosenCard,chosenUnit,onPlay,onStrike,onC
 export default function BattlefieldOverlay(props:BattlefieldOverlayProps){
   return <div className="field-layout-overlay">
     <PlayerFormation {...props} owner={1}/>
-    <div className="field-center-mark" aria-hidden="true">✦ BREAK THE WALLS ✦</div>
-    <div className="field-shared-magic" data-zone="shared-field" aria-label="공용 필드마법 존 · 미구현"
-      title="공용 필드마법 존은 향후 구현 예정입니다">
-      ✧ 공용 필드 존 <span>준비 중</span>
+    <div className="field-shared-magic field-shared-magic-center"
+      data-zone="shared-field" data-placement="battle-center" role="note"
+      aria-label="전장 정중앙 공용 필드마법 슬롯 · 비어 있음 · 효과 미구현"
+      title="공용 필드마법은 단일 중앙 슬롯입니다. 실제 사용·교체·효과 규칙은 추후 구현 예정입니다.">
+      <span className="field-shared-emblem" aria-hidden="true">✦</span>
+      <strong>공용 필드마법</strong>
+      <small>빈 슬롯 · 준비 중</small>
     </div>
     <PlayerFormation {...props} owner={0}/>
   </div>;
