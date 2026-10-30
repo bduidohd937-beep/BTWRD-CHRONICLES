@@ -255,7 +255,9 @@ describe('COMBAT ALPHA V0.5.3 streamlined flow',()=>{
     await act(async()=>first.click());
     await act(async()=>zone.click());
     await act(async()=>clickButton('공격 표시'));
-    expect(end().className).not.toContain('field-end-turn-ready');
+    // With 1/2 mana and only unaffordable or unavailable remaining cards,
+    // no ready unit action remains: end turn should now glow.
+    expect(end().className).toContain('field-end-turn-ready');
   });
 
   it('labels current on-summon effects mandatory when printed card text does not grant a choice',async()=>{
