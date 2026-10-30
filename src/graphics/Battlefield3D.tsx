@@ -33,7 +33,7 @@ function brick(parent:THREE.Group,shape:[number,number,number],at:[number,number
 
 function castle(owner:number,lane:number):CastleModel{
   const root=new THREE.Group();
-  root.position.set(LANE_X[lane],0,owner===0?3:-3);
+  root.position.set(LANE_X[lane],0,owner===0?2.25:-2.25);
   const intact=new THREE.Group(),rubble=new THREE.Group(),cracks=new THREE.Group();
   root.add(intact,rubble,cracks);
   const wall=owner===0?stoneA:stoneB;
@@ -78,7 +78,7 @@ function castle(owner:number,lane:number):CastleModel{
 
 function unitMarker(owner:number,lane:number,unit:Unit,now:number):UnitModel{
   const group=new THREE.Group();
-  group.position.set(LANE_X[lane],.03,owner===0?1.15:-1.15);
+  group.position.set(LANE_X[lane],.03,owner===0?.65:-.65);
   const base=owner===0?0x4cbbb5:0xce748e;
   const baseMat=material(base);
   const stone=material(0x262239);
