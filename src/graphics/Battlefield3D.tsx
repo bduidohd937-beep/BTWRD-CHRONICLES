@@ -33,7 +33,7 @@ function brick(parent:THREE.Group,shape:[number,number,number],at:[number,number
 
 function castle(owner:number,lane:number):CastleModel{
   const root=new THREE.Group();
-  root.position.set(LANE_X[lane],0,owner===0?2.25:-2.25);
+  root.position.set(LANE_X[lane],0,owner===0?4.4:-4.4);
   const intact=new THREE.Group(),rubble=new THREE.Group(),cracks=new THREE.Group();
   root.add(intact,rubble,cracks);
   const wall=owner===0?stoneA:stoneB;
@@ -78,7 +78,7 @@ function castle(owner:number,lane:number):CastleModel{
 
 function unitMarker(owner:number,lane:number,unit:Unit,now:number):UnitModel{
   const group=new THREE.Group();
-  group.position.set(LANE_X[lane],.03,owner===0?.65:-.65);
+  group.position.set(LANE_X[lane],.03,owner===0?2.3:-2.3);
   const base=owner===0?0x4cbbb5:0xce748e;
   const baseMat=material(base);
   const stone=material(0x262239);
@@ -124,9 +124,9 @@ export default function Battlefield3D({battle}:{battle:BattleState}){
     }
     const scene=new THREE.Scene();
     scene.background=new THREE.Color(0x15101f);
-    scene.fog=new THREE.Fog(0x15101f,15,28);
+    scene.fog=new THREE.Fog(0x15101f,18,34);
     const camera=new THREE.OrthographicCamera(-8.15,8.15,4.45,-4.45,.1,80);
-    camera.position.set(0,10.5,14.5);
+    camera.position.set(0,16,12);
     camera.lookAt(0,.2,0);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
     renderer.outputColorSpace=THREE.SRGBColorSpace;
@@ -138,16 +138,43 @@ export default function Battlefield3D({battle}:{battle:BattleState}){
     light.position.set(-5,10,7);scene.add(light);
     const rim=new THREE.DirectionalLight(0x729fe2,1.6);
     rim.position.set(5,5,-6);scene.add(rim);
-    const field=new THREE.Mesh(new THREE.PlaneGeometry(22,11),floorStone);
+    const field=new THREE.Mesh(new THREE.PlaneGeometry(23,15),floorStone);
     field.rotation.x=-Math.PI/2;field.position.y=-.03;scene.add(field);
     [-3.3,3.3].forEach(x=>{
-      const separator=new THREE.Mesh(new THREE.BoxGeometry(.035,.014,9),golden);
+      const separator=new THREE.Mesh(new THREE.BoxGeometry(.035,.014,15),golden);
       separator.position.set(x,-.01,0);scene.add(separator);
     });
     [-.16,.16].forEach(z=>{
       const center=new THREE.Mesh(new THREE.BoxGeometry(20,.012,.025),golden);
       center.position.set(0,.015,z);scene.add(center);
     });
+    // Three playable lanes are framed by subtle stone paths, not borrowed game assets.
+    const decorations=new THREE.Group();
+    scene.add(decorations);
+    for(const x of LANE_X){
+      const path=new THREE.Mesh(
+        new THREE.PlaneGeometry(3.35,14),
+        new THREE.MeshStandardMaterial({color:0x3f364b,roughness:1,metalness:0,transparent:true,opacity:.55}),
+      );
+      path.rotation.x=-Math.PI/2;
+      path.position.set(x,-.015,0);
+      decorations.add(path);
+      for(const z of [-5,-3,-1,1,3,5]){
+        const tile=new THREE.Mesh(
+          new THREE.RingGeometry(.56,.66,6),
+          new THREE.MeshBasicMaterial({color:0x9e8eaf,transparent:true,opacity:.17,side:THREE.DoubleSide}),
+        );
+        tile.rotation.x=-Math.PI/2;
+        tile.position.set(x,-.002,z);
+        decorations.add(tile);
+      }
+    }
+    const frontline=new THREE.Mesh(
+      new THREE.BoxGeometry(20,.018,.08),
+      new THREE.MeshBasicMaterial({color:0xd4a86f,transparent:true,opacity:.55}),
+    );
+    frontline.position.set(0,.018,0);
+    decorations.add(frontline);
     const castles:CastleModel[][]=[
       MAX_WALL.map((_,i)=>castle(0,i)),
       MAX_WALL.map((_,i)=>castle(1,i)),
@@ -202,7 +229,7 @@ export default function Battlefield3D({battle}:{battle:BattleState}){
       const width=Math.max(1,mount.clientWidth),height=Math.max(1,mount.clientHeight);
       const aspect=width/height;
       // Preserve correct 3D proportions while fitting all three lanes.
-      const verticalSpan=Math.max(6.9,18.2/aspect);
+      const verticalSpan=Math.max(12.2,19.6/aspect);
       const halfHeight=verticalSpan/2;
       camera.left=-halfHeight*aspect;camera.right=halfHeight*aspect;
       camera.top=halfHeight;camera.bottom=-halfHeight;
@@ -240,7 +267,7 @@ export default function Battlefield3D({battle}:{battle:BattleState}){
           const lunge=swing>=0&&swing<.42?Math.sin(Math.PI*swing/.42)*.5:0;
           marker.group.position.x=(LANE_X[Number(marker.key.split('-')[1])]??0)+shake;
           marker.group.position.y=.02+Math.sin(now*2)*.035;
-          marker.group.position.z=(marker.owner===0?.65:-.65)+(marker.owner===0?-lunge:lunge);
+          marker.group.position.z=(marker.owner===0?2.3:-2.3)+(marker.owner===0?-lunge:lunge);
         }
       }
       for(let i=dying.length-1;i>=0;i--){
@@ -265,6 +292,14 @@ export default function Battlefield3D({battle}:{battle:BattleState}){
       markers.forEach(m=>{scene.remove(m.group);disposeChildren(m.group);});
       dying.forEach(m=>{scene.remove(m.group);disposeChildren(m.group);});
       castles.flat().forEach(c=>disposeChildren(c.root));
+      decorations.traverse(object=>{
+        if(object instanceof THREE.Mesh){
+          object.geometry.dispose();
+          const materials=Array.isArray(object.material)?object.material:[object.material];
+          materials.forEach(material=>material.dispose());
+        }
+      });
+      scene.remove(decorations);
       scene.remove(field);field.geometry.dispose();
       renderer.dispose();
       if(mount.contains(renderer.domElement))mount.removeChild(renderer.domElement);
