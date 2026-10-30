@@ -1,4 +1,4 @@
-import type {BattleState,Card,Player,Stance,Unit} from './types';
+import type {BattleState,Card,PendingEffect,Player,Stance,Unit} from './types';
 
 const WALL_NAMES=['좌','중앙','우'] as const;
 const MAX_HAND=7;
@@ -15,7 +15,7 @@ export const makePlayer=(name:string):Player=>{
   return {
     name,hp:20,mana:2,maxMana:2,turnsTaken:0,
     deck:deck.slice(5),hand:deck.slice(0,5),
-    grave:[],lanes:[[],[],[]],walls:[8,9,8],
+    grave:[],lanes:[[],[],[]],spellZones:[null,null,null],walls:[8,9,8],
   };
 };
 
@@ -25,8 +25,31 @@ export const newBattle=(cards:Card[]):BattleState=>{
   return {turn:1,active:0,players:[makePlayer('플레이어 A'),makePlayer('플레이어 B')],log:['전투 시작 — 플레이어 A 선공']};
 };
 
-const canAct=(s:BattleState)=>!s.winner&&!s.discarding&&!s.pendingRetreat;
+const canAct=(s:BattleState)=>!s.winner&&!s.discarding&&!s.pendingRetreat&&!s.pendingEffect;
 const isTargetSpell=(id:string)=>id==='S001'||id==='S002'||id==='H004';
+
+/** Side taunts guard their adjacent center; center taunts choose one side at summon. */
+export function guardCovers(unit:Unit,unitLane:number,protectedLane:number):boolean{
+  if(!unit.taunt)return false;
+  if(unitLane===protectedLane)return true;
+  if(unitLane===0||unitLane===2)return protectedLane===1;
+  return protectedLane===unit.guardSide;
+}
+
+export function legalAttackTargets(state:BattleState,lane:number,unitIndex=0):{
+  unitLanes:number[];wallLane:number|null
+}{
+  const empty={unitLanes:[] as number[],wallLane:null};
+  if(!canAct(state)||!isLane(lane))return empty;
+  const attacker=state.players[state.active].lanes[lane][unitIndex];
+  if(!attacker||!attacker.canAttack||attacker.stance!=='attack')return empty;
+  const enemy=state.players[1-state.active];
+  if(enemy.lanes[lane].length>0)return {unitLanes:[lane],wallLane:null};
+  const guards=[0,1,2].filter(i=>enemy.lanes[i].some(u=>guardCovers(u,i,lane)));
+  if(guards.length>0)return {unitLanes:guards,wallLane:null};
+  return {unitLanes:[],wallLane:enemy.walls[lane]>0?lane:null};
+}
+
 
 export function canPlayCard(state:BattleState,index:number,lane:number):boolean{
   if(!canAct(state)||!isLane(lane))return false;
@@ -62,8 +85,10 @@ const clearDead=(state:BattleState)=>{
   }
 };
 
-export function playCard(state:BattleState,index:number,lane=0,stance:Stance='attack'):BattleState {
+export function playCard(state:BattleState,index:number,lane=0,stance:Stance='attack',guardSide?:0|2):BattleState {
   if(!canPlayCard(state,index,lane))return state;
+  const incoming=state.players[state.active].hand[index];
+  if(incoming.type==='유닛'&&incoming.text.includes('도발')&&lane===1&&guardSide!==0&&guardSide!==2)return state;
   const next=structuredClone(state);
   const owner=next.active, p=next.players[owner], card=p.hand[index];
   p.mana-=card.cost;
@@ -73,6 +98,7 @@ export function playCard(state:BattleState,index:number,lane=0,stance:Stance='at
       cardId:card.id,name:card.name,atk:card.atk??0,hp:card.hp??1,
       maxHp:card.hp??1,canAttack:card.id==='R001'&&stance==='attack',
       stance,taunt:card.text.includes('도발'),temporaryAttack:0,
+      guardSide:lane===1&&card.text.includes('도발')?guardSide:undefined,stunnedTurns:0,
     };
     p.lanes[lane]=[unit];
     next.log.unshift(`${p.name}: ${WALL_NAMES[lane]} 전선에 ${card.name} 소환 (${stance==='attack'?'공격':'수비'})`);
