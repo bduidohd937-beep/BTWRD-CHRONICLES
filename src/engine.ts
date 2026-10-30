@@ -251,9 +251,11 @@ export function attackUnit(
   }else{
     enemy.walls[targetLane]=Math.max(0,enemy.walls[targetLane]-attacker.atk);
     const breakthrough=targetLane!==lane;
-    next.log.unshift(own.name+': '+attacker.name+
-      (breakthrough?' 자유 돌파 공성 ('+WALL_NAMES[lane]+' → '+WALL_NAMES[targetLane]+')':'')+
-      ' · '+WALL_NAMES[targetLane]+' 성벽에 '+attacker.atk+' 피해 (추가 마나·공격력 페널티 없음)');
+    next.log.unshift(breakthrough?
+      own.name+': '+attacker.name+' 자유 돌파 공성 ('+
+      WALL_NAMES[lane]+' → '+WALL_NAMES[targetLane]+') · '+
+      WALL_NAMES[targetLane]+' 성벽에 '+attacker.atk+' 피해 (추가 마나·공격력 페널티 없음)':
+      own.name+': '+WALL_NAMES[targetLane]+' 성벽에 '+attacker.atk+' 피해');
     if(enemy.walls.every(w=>w===0)){
       next.winner=own.name;
       next.log.unshift(own.name+' 세 성벽 붕괴 승리!');
