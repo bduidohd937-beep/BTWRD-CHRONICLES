@@ -9,6 +9,7 @@
   color:var(--combat-ink);
 }
 .combat-command{
+  max-width:none;margin:4px 0 8px;padding:0;border:0;background:transparent;
   display:flex;align-items:center;justify-content:space-between;gap:10px;
   margin:4px 0 8px;flex-wrap:wrap;
 }
