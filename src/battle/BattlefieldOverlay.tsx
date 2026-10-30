@@ -115,6 +115,7 @@ function PlayerFormation({battle,owner,chosenCard,chosenUnit,onPlay,onStrike,onC
   onPlay:(lane:number)=>void;onStrike:(lane:number,target:number|null)=>void;
   onChooseUnit:(lane:number)=>void;onResolveEffect:(lane:number)=>void;
   onRetreat:(lane:number)=>void;onInspect:(card:Card)=>void;
+  onPreviewUnit:(unit:Unit|null)=>void;
 }){
   const player=battle.players[owner];
   const active=owner===battle.active;
