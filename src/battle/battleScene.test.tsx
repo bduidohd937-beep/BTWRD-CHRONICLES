@@ -37,7 +37,7 @@ afterEach(async()=>{
   document.body.style.overflow='';
 });
 
-describe('COMBAT ALPHA V0.5.3 streamlined flow',()=>{
+describe('COMBAT ALPHA V0.5.4 streamlined action bar and previews',()=>{
   it('hides the global page header and nav during battle, keeping the 3D scene and hand visible',async()=>{
     await act(async()=>root.render(<App/>));
     expect(host.querySelector('.app-tabs')).not.toBeNull();
@@ -158,8 +158,8 @@ describe('COMBAT ALPHA V0.5.3 streamlined flow',()=>{
   it('previews original card art, stats and effect in upper-left detail inspector',async()=>{
     await act(async()=>root.render(<App/>));
     await act(async()=>clickButton('⚔ 전투'));
-    const detail=host.querySelector('.field-card-detail');
-    expect(detail).not.toBeNull();
+    expect(host.querySelector('.field-card-detail')).toBeNull();
+    expect(host.querySelector('.field-inspector-tab')).not.toBeNull();
     const first=host.querySelector('.field-hand-card') as HTMLButtonElement;
     await act(async()=>first.dispatchEvent(new FocusEvent('focusin',{bubbles:true})));
     const inspected=host.querySelector('.field-card-detail')!;
@@ -260,7 +260,7 @@ describe('COMBAT ALPHA V0.5.3 streamlined flow',()=>{
     expect(end().className).toContain('field-end-turn-ready');
   });
 
-  it('labels current on-summon effects mandatory when printed card text does not grant a choice',async()=>{
+  it('starts with no pending on-summon decision when no ability has triggered',async()=>{
     await act(async()=>root.render(<App/>));
     await act(async()=>clickButton('⚔ 전투'));
     // Enemy A's initial U003 can trigger once the opponent has an eligible unit.
@@ -277,6 +277,57 @@ describe('COMBAT ALPHA V0.5.3 streamlined flow',()=>{
     const pips=stage.querySelector('.field-mana-pips') as HTMLElement;
     expect(pips.style.getPropertyValue('--pip-count')).toBe('2');
     expect(pips.querySelectorAll('.field-mana-pip')).toHaveLength(2);
+  });
+
+  it('has just one main turn-end action in the center overlay, never in the top HUD',async()=>{
+    await act(async()=>root.render(<App/>));
+    await act(async()=>clickButton('⚔ 전투'));
+    const stage=host.querySelector('.battle-field-stage')!;
+    expect(stage.querySelector('.field-top-actions .field-end-turn')).toBeNull();
+    const bar=stage.querySelector('.field-turn-actionbar')!;
+    expect(bar).not.toBeNull();
+    expect(bar.querySelectorAll('.field-end-turn')).toHaveLength(1);
+    expect(bar.textContent).toContain('사용 가능한 카드');
+    await act(async()=>clickButton('턴 종료'));
+    expect(host.textContent).toContain('ROUND 2');
+  });
+
+  it('folds the card inspector back into a small tab and allows pin/unpin',async()=>{
+    await act(async()=>root.render(<App/>));
+    await act(async()=>clickButton('⚔ 전투'));
+    expect(host.querySelector('.field-inspector-tab')).not.toBeNull();
+    expect(host.querySelector('.field-inspector-expanded')).toBeNull();
+    const first=host.querySelector('.field-hand-card') as HTMLButtonElement;
+    await act(async()=>first.dispatchEvent(new FocusEvent('focusin',{bubbles:true})));
+    expect(host.querySelector('.field-inspector-expanded')).not.toBeNull();
+    const pin=host.querySelector('.field-inspector-controls button[aria-pressed="false"]') as HTMLButtonElement;
+    await act(async()=>pin.click());
+    const pinned=host.querySelector('.field-inspector-controls button[aria-pressed="true"]') as HTMLButtonElement;
+    expect(pinned).not.toBeNull();
+    await act(async()=>first.dispatchEvent(new FocusEvent('focusout',{bubbles:true})));
+    expect(host.querySelector('.field-card-detail')?.textContent).toContain('왕국 병사');
+    await act(async()=>{
+      const collapse=host.querySelector('button[aria-label="카드 정보 접기"]') as HTMLButtonElement;
+      collapse.click();
+    });
+    expect(host.querySelector('.field-inspector-tab')).not.toBeNull();
+  });
+
+  it('keeps log drawer closed until requested and has full-width line entries and a close button',async()=>{
+    await act(async()=>root.render(<App/>));
+    await act(async()=>clickButton('⚔ 전투'));
+    expect(host.querySelector('.field-log-drawer')).toBeNull();
+    await act(async()=>clickButton('턴 종료'));
+    await act(async()=>clickButton('전투 기록'));
+    const drawer=host.querySelector('.field-log-drawer')!;
+    expect(drawer).not.toBeNull();
+    expect(drawer.querySelector('.field-log-items')).not.toBeNull();
+    expect(drawer.querySelectorAll('.field-log-entry').length).toBeGreaterThan(1);
+    expect(drawer.querySelector('[aria-label="전투 기록 닫기"]')).not.toBeNull();
+    await act(async()=>{
+      (drawer.querySelector('[aria-label="전투 기록 닫기"]') as HTMLButtonElement).click();
+    });
+    expect(host.querySelector('.field-log-drawer')).toBeNull();
   });
 
 });
