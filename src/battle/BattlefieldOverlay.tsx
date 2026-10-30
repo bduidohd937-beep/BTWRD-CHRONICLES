@@ -60,7 +60,7 @@ function UnitZone({owner,lane,unit,player,selected,canDeploy,canHit,canResolve,c
   onChooseUnit:(lane:number)=>void;onResolveEffect:(lane:number)=>void;
   onRetreat:(lane:number)=>void;onInspect:(card:Card)=>void;
 }){
-  const canClick=canDeploy||canHit||canResolve||canRetreat||canSpellTarget||canChoose;
+  const canClick=canDeploy||canHit||canResolve||canRetreat||canSpellTarget||canChoose||!!unit;
   const canSelect=canChoose&&!canSpellTarget&&!canResolve;
   const inspectLabel=unit?unit.name:'빈 유닛 존';
   const card=unit?{id:unit.cardId,name:unit.name,rarity:'일반',type:'유닛' as const,
@@ -137,9 +137,11 @@ function PlayerFormation({battle,owner,chosenCard,chosenUnit,onPlay,onStrike,onC
         // For B: walls -> spells -> units. For A: units -> spells -> walls.
         return <div key={lane} className="field-formation-column"
           style={{'--field-index':lane} as CSSProperties}>
-          <WallZone owner={owner} player={player} lane={lane}
-            canHitWall={canHitWall} onStrike={onStrike}/>
-          <InstalledSpellZone player={player} lane={lane}/>
+          {owner===1?<>
+            <WallZone owner={owner} player={player} lane={lane}
+              canHitWall={canHitWall} onStrike={onStrike}/>
+            <InstalledSpellZone player={player} lane={lane}/>
+          </>:null}
           <UnitZone owner={owner} lane={lane} unit={unit} player={player}
             selected={active&&chosenUnit?.lane===lane}
             canDeploy={canDeploy&&!unit} canHit={canHit} canChoose={canChoose}
@@ -147,6 +149,11 @@ function PlayerFormation({battle,owner,chosenCard,chosenUnit,onPlay,onStrike,onC
             canSpellTarget={canSpellTarget}
             onPlay={onPlay} onStrike={onStrike} onChooseUnit={onChooseUnit}
             onResolveEffect={onResolveEffect} onRetreat={onRetreat} onInspect={onInspect}/>
+          {owner===0?<>
+            <InstalledSpellZone player={player} lane={lane}/>
+            <WallZone owner={owner} player={player} lane={lane}
+              canHitWall={canHitWall} onStrike={onStrike}/>
+          </>:null}
           {canChoose&&<span className="field-ready-marker" aria-hidden="true">●</span>}
         </div>;
       })}
