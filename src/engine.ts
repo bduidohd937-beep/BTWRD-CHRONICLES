@@ -85,6 +85,54 @@ const clearDead=(state:BattleState)=>{
   }
 };
 
+
+const targetPlayer=(state:BattleState,pending:PendingEffect):Player=>
+  state.players[pending.type==='ally-heal'?pending.owner:1-pending.owner];
+
+const validPendingTarget=(state:BattleState,pending:PendingEffect,lane:number):boolean=>{
+  if(!isLane(lane))return false;
+  const target=targetPlayer(state,pending).lanes[lane][0];
+  if(!target)return false;
+  if(pending.type==='ally-heal')return target.hp<target.maxHp;
+  return true;
+};
+
+export const eligibleEffectLanes=(state:BattleState):number[]=>{
+  const pending=state.pendingEffect;
+  if(!pending)return [];
+  return [0,1,2].filter(lane=>validPendingTarget(state,pending,lane));
+};
+
+const summonTrigger=(state:BattleState,owner:number,cardId:string):PendingEffect|undefined=>{
+  const specs:Record<string,Omit<PendingEffect,'owner'|'sourceCardId'>>={
+    U003:{type:'enemy-damage',amount:1},
+    U004:{type:'ally-heal',amount:2},
+    H001:{type:'ally-heal',amount:3},
+    H002:{type:'enemy-damage',amount:3},
+    M001:{type:'enemy-disable',amount:1},
+  };
+  const spec=specs[cardId];
+  if(!spec)return undefined;
+  const effect:PendingEffect={...spec,owner,sourceCardId:cardId};
+  return [0,1,2].some(lane=>validPendingTarget(state,effect,lane))?effect:undefined;
+};
+
+export function resolvePendingEffect(state:BattleState,lane:number):BattleState{
+  const pending=state.pendingEffect;
+  if(!pending||state.winner||!validPendingTarget(state,pending,lane))return state;
+  const next=structuredClone(state);
+  const target=targetPlayer(next,pending).lanes[lane][0];
+  if(pending.type==='enemy-damage')target.hp-=pending.amount;
+  if(pending.type==='ally-heal')target.hp=Math.min(target.maxHp,target.hp+pending.amount);
+  if(pending.type==='enemy-disable')target.stunnedTurns=(target.stunnedTurns??0)+1;
+  const action=pending.type==='enemy-damage'?'효과 피해 '+pending.amount:
+    pending.type==='ally-heal'?'체력 회복 '+pending.amount:'다음 자기 턴 행동 봉쇄';
+  next.log.unshift((cardById(pending.sourceCardId)?.name??pending.sourceCardId)+': '+target.name+' → '+action);
+  delete next.pendingEffect;
+  clearDead(next);
+  return next;
+}
+
 export function playCard(state:BattleState,index:number,lane=0,stance:Stance='attack',guardSide?:0|2):BattleState {
   if(!canPlayCard(state,index,lane))return state;
   const incoming=state.players[state.active].hand[index];
@@ -104,7 +152,18 @@ export function playCard(state:BattleState,index:number,lane=0,stance:Stance='at
     next.log.unshift(`${p.name}: ${WALL_NAMES[lane]} 전선에 ${card.name} 소환 (${stance==='attack'?'공격':'수비'})`);
     if(card.id==='U006')draw(next,owner,1);
     if(card.id==='H003')draw(next,owner,2);
-    // Other on-summon effects and the full response chain remain unsupported.
+    if(card.id==='R003'){
+      p.lanes.flat().forEach(ally=>{ally.hp=Math.min(ally.maxHp,ally.hp+1);});
+      next.log.unshift(card.name+': 아군 유닛 체력 1 회복');
+    }
+    if(!next.winner){
+      const pending=summonTrigger(next,owner,card.id);
+      if(pending){
+        next.pendingEffect=pending;
+        next.log.unshift(card.name+': 능력 대상 선택 필요');
+      }
+    }
+    // Other on-summon effects and response chains remain unsupported.
   } else {
     p.grave.push(card);
     const ally=p.lanes[lane][0];
@@ -229,7 +288,12 @@ export function endTurn(state:BattleState):BattleState{
   const incoming=next.players[next.active];
   incoming.maxMana=Math.min(MAX_MANA,2+incoming.turnsTaken);
   incoming.mana=incoming.maxMana;
-  incoming.lanes.flat().forEach(unit=>{unit.canAttack=true;});
+  incoming.lanes.flat().forEach(unit=>{
+    if((unit.stunnedTurns??0)>0){
+      unit.stunnedTurns=(unit.stunnedTurns??0)-1;
+      unit.canAttack=false;
+    }else unit.canAttack=true;
+  });
   // Each player first draws at the beginning of their SECOND personal turn.
   if(incoming.turnsTaken>0)draw(next,next.active,1);
   next.log.unshift(`${incoming.name} 자기 턴 ${incoming.turnsTaken+1} 시작 · 마나 ${incoming.maxMana}`);
