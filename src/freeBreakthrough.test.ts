@@ -86,6 +86,7 @@ describe('COMBAT V0.5.2 — adopted siege rule A: free breakthrough',()=>{
 
   it('works symmetrically for player B on its own turn',()=>{
     let b=battle(0);
+    b.players[0].lanes[0]=[]; // No defender blocking B's target left wall.
     b.players[1].lanes[2]=[troop('U003',{atk:3})];
     b.players[0].walls[2]=0;
     b=endTurn(b);
