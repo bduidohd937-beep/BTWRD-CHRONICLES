@@ -5,21 +5,16 @@ import type {Rarity} from '../foundation/foundationTypes';
 import {rarityOf} from '../foundation/foundationCards';
 import CardArtwork from '../foundation/CardArtwork';
 
-export default function HandFan({cards,selected,disabled,discardMode,onChoose}:{
+export default function HandFan({cards,selected,disabled,discardMode,onChoose,onPreview}:{
   cards:Card[];
   selected:number|null;
   disabled:(card:Card)=>boolean;
   discardMode:boolean;
   onChoose:(index:number)=>void;
+  onPreview:(card:Card|null)=>void;
 }){
   const [hovered,setHovered]=useState<number|null>(null);
-  const focusedIndex=hovered!==null&&hovered<cards.length?hovered:selected;
-  const focused=focusedIndex===null?null:cards[focusedIndex];
   return <div className="field-hand-layer" aria-label="플레이어 손패">
-    {focused&&<div className="field-card-inspect" aria-live="polite">
-      <strong>{focused.name} <span>💧{focused.cost}</span></strong>
-      <span>{focused.type==='유닛'?('⚔ '+(focused.atk??0)+' · ♥ '+(focused.hp??0)):'마법'} · {focused.text}</span>
-    </div>}
     <div className="field-hand-fan" role="group" aria-label={'손패 '+cards.length+'장'}>
       {cards.map((card,i)=>{
         const center=(cards.length-1)/2;
@@ -37,15 +32,15 @@ export default function HandFan({cards,selected,disabled,discardMode,onChoose}:{
         const isBlocked=disabled(card);
         return <button key={card.id+'-'+i} type="button"
           className={['field-hand-card',isSelected?'field-hand-selected':'',
-            isHovered?'field-hand-hovered':'',discardMode?'field-hand-discard':''].join(' ')}
+            isHovered?'field-hand-hovered':'',discardMode?'field-hand-discard':'',isBlocked?'field-hand-unavailable':''].join(' ')}
           style={style}
-          disabled={isBlocked}
+          aria-disabled={isBlocked}
           aria-pressed={isSelected}
           aria-label={(discardMode?'버릴 카드: ':'손패: ')+card.name+', 코스트 '+card.cost+', '+card.text}
-          onMouseEnter={()=>setHovered(i)}
-          onMouseLeave={()=>setHovered(current=>current===i?null:current)}
-          onFocus={()=>setHovered(i)}
-          onBlur={()=>setHovered(current=>current===i?null:current)}
+          onMouseEnter={()=>{setHovered(i);onPreview(card);}}
+          onMouseLeave={()=>{setHovered(current=>current===i?null:current);onPreview(null);}}
+          onFocus={()=>{setHovered(i);onPreview(card);}}
+          onBlur={()=>{setHovered(current=>current===i?null:current);onPreview(null);}}
           onClick={()=>onChoose(i)}>
           <span className="field-hand-card-head">
             <span>{card.rarity}</span>
