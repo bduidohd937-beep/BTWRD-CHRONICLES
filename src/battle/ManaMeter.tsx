@@ -1,3 +1,4 @@
+import type {CSSProperties} from 'react';
 export default function ManaMeter({mana,maxMana,previewCost}:{
   mana:number;maxMana:number;previewCost:number|null;
 }){
@@ -7,7 +8,8 @@ export default function ManaMeter({mana,maxMana,previewCost}:{
       <strong>💧 마나</strong>
       <span>{mana} / {maxMana}</span>
     </div>
-    <div className="field-mana-pips" role="img" aria-label={maxMana+'칸 중 '+mana+'칸 사용 가능'}>
+    <div className="field-mana-pips" role="img" aria-label={maxMana+'칸 중 '+mana+'칸 사용 가능'}
+      style={{'--pip-count':Math.max(1,maxMana)} as CSSProperties}>
       {Array.from({length:maxMana},(_,i)=>{
         const active=i<mana;
         const consuming=active&&previewCost!==null&&i>=Math.max(0,remaining??0);
