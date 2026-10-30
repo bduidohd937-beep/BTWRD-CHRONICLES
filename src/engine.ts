@@ -159,7 +159,7 @@ export function isPendingEffectOptional(state:BattleState):boolean {
   const pending=state.pendingEffect;
   if(!pending)return false;
   const printedText=cardById(pending.sourceCardId)?.text??'';
-  return /(?:할 수 있다|선택하여 발동|발동해도 된다)/.test(printedText);
+  return /(?:수 있다|선택하여 발동|발동해도 된다)/.test(printedText);
 }
 
 export function skipPendingEffect(state:BattleState):BattleState {
