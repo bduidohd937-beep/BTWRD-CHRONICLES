@@ -85,7 +85,7 @@ function UnitZone({owner,lane,unit,player,selected,canDeploy,canHit,canResolve,c
       canDeploy?'이 전선에 유닛 소환':canRetreat?'유닛 퇴각 전선':inspectLabel}
     aria-label={player.name+' '+names[lane]+' '+(unit?unit.name+' 공격 '+unit.atk+' 체력 '+unit.hp+'/'+unit.maxHp:'빈 유닛 존')}>
     {unit&&card?<>
-      <span className="field-card-art"><CardArtwork card={card}/></span>
+      <div className="field-card-art"><CardArtwork card={card}/></div>
       <span className="field-card-details">
         <strong>{unit.name}</strong>
         <small>⚔ {unit.atk} &nbsp; ♥ {unit.hp}/{unit.maxHp}</small>
