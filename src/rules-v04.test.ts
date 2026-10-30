@@ -81,7 +81,7 @@ describe('COMBAT V0.4 — on-summon target selection',()=>{
     b=resolvePendingEffect(b,2);
     expect(b.pendingEffect).toBeUndefined();
     expect(b.players[1].lanes[2]).toHaveLength(0);
-    expect(b.players[1].grave.at(-1)?.id).toBe('U001');
+    expect(b.players[1].grave[b.players[1].grave.length-1]?.id).toBe('U001');
   });
 
   it('priest selects a wounded allied unit; an unwounded battlefield does not block play',()=>{
