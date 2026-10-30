@@ -1,0 +1,23 @@
+name: Combat Alpha V0.3.2 checks
+on:
+  push:
+    branches:
+      - feature/combat-alpha-v032-lobby-devgem
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Unit tests
+        run: npm run test
+      - name: Production build
+        run: npm run build
