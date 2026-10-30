@@ -37,7 +37,7 @@ afterEach(async()=>{
   document.body.style.overflow='';
 });
 
-describe('COMBAT ALPHA V0.4.1 independent battle scene',()=>{
+describe('COMBAT ALPHA V0.5.0 full battlefield overlay',()=>{
   it('hides the global page header and nav during battle, keeping the 3D scene and hand visible',async()=>{
     await act(async()=>root.render(<App/>));
     expect(host.querySelector('.app-tabs')).not.toBeNull();
@@ -47,10 +47,12 @@ describe('COMBAT ALPHA V0.4.1 independent battle scene',()=>{
     expect(host.querySelector('.battle-scene-root')).not.toBeNull();
     expect(host.querySelector('.app-tabs')).toBeNull();
     expect(host.querySelector('.topbar')).toBeNull();
-    expect(host.querySelector('.battle-scene-side-panel')).not.toBeNull();
-    expect(host.querySelector('.battle-scene-board>.combat-arena')).not.toBeNull();
+    expect(host.querySelector('.battle-scene-side-panel')).toBeNull();
+    expect(host.querySelector('.battle-field-stage')).not.toBeNull();
+    expect(host.querySelector('.field-layout-overlay')).not.toBeNull();
     expect(host.querySelector('[data-testid="mock-3d"]')).not.toBeNull();
-    expect(host.querySelector('.combat-hand-v033')).not.toBeNull();
+    expect(host.querySelector('.battle-field-stage .field-hand-fan')).not.toBeNull();
+    expect(host.querySelectorAll('.battle-field-stage .field-hand-card')).toHaveLength(5);
     expect(document.body.style.overflow).toBe('hidden');
   });
 
@@ -99,11 +101,50 @@ describe('COMBAT ALPHA V0.4.1 independent battle scene',()=>{
   it('opens the log on demand without pushing it into the board or hand layout',async()=>{
     await act(async()=>root.render(<App/>));
     await act(async()=>clickButton('⚔ 전투'));
-    expect(host.querySelector('.combat-log-drawer')).toBeNull();
+    expect(host.querySelector('.field-log-drawer')).toBeNull();
     await act(async()=>clickButton('전투 기록'));
-    expect(host.querySelector('.combat-log-drawer')).not.toBeNull();
-    expect(host.querySelector('.combat-hand-v033')).not.toBeNull();
+    expect(host.querySelector('.field-log-drawer')).not.toBeNull();
+    expect(host.querySelector('.field-hand-fan')).not.toBeNull();
     await act(async()=>clickButton('닫기'));
-    expect(host.querySelector('.combat-log-drawer')).toBeNull();
+    expect(host.querySelector('.field-log-drawer')).toBeNull();
   });
+  it('keeps 5 cards inside the field and has six unit, rear magic and wall slots',async()=>{
+    await act(async()=>root.render(<App/>));
+    await act(async()=>clickButton('⚔ 전투'));
+    const stage=host.querySelector('.battle-field-stage');
+    expect(stage).not.toBeNull();
+    expect(stage!.querySelector('.field-hand-fan')).not.toBeNull();
+    expect(stage!.querySelectorAll('.field-hand-card')).toHaveLength(5);
+    expect(stage!.querySelectorAll('[data-zone="unit"]')).toHaveLength(6);
+    expect(stage!.querySelectorAll('[data-zone="magic"]')).toHaveLength(6);
+    expect(stage!.querySelectorAll('[data-zone="wall"]')).toHaveLength(6);
+    expect(stage!.querySelector('[data-zone="shared-field"]')).not.toBeNull();
+  });
+
+  it('puts magic behind the unit for both player perspectives',async()=>{
+    await act(async()=>root.render(<App/>));
+    await act(async()=>clickButton('⚔ 전투'));
+    const enemy=host.querySelector('.field-formation-enemy .field-formation-column')!;
+    const ally=host.querySelector('.field-formation-self .field-formation-column')!;
+    const order=(element:Element)=>Array.from(element.children)
+      .filter(el=>el.hasAttribute('data-zone'))
+      .map(el=>el.getAttribute('data-zone'));
+    expect(order(enemy)).toEqual(['wall','magic','unit']);
+    expect(order(ally)).toEqual(['unit','magic','wall']);
+  });
+
+  it('deploys a card through the clickable full-field unit slot without sidebar',async()=>{
+    await act(async()=>root.render(<App/>));
+    await act(async()=>clickButton('⚔ 전투'));
+    const myZone=()=>host.querySelector('button[data-zone="unit"][data-owner="0"][data-lane="0"]') as HTMLButtonElement;
+    expect(myZone().textContent).not.toContain('왕국 병사');
+    const first=host.querySelector('.field-hand-card') as HTMLButtonElement;
+    await act(async()=>first.dispatchEvent(new MouseEvent('click',{bubbles:true})));
+    expect(myZone().disabled).toBe(false);
+    expect(myZone().className).toContain('field-zone-target');
+    await act(async()=>myZone().dispatchEvent(new MouseEvent('click',{bubbles:true})));
+    expect(myZone().textContent).toContain('왕국 병사');
+    expect(host.querySelectorAll('.field-hand-card')).toHaveLength(4);
+  });
+
 });
