@@ -4,6 +4,7 @@ import type { ChronicleCard, GameSave, Rarity, SummonResult, Tab } from "./types
 import { CARDS, CFG, RARITIES, rarityIndex, rarityOf } from "./data/cards";
 import { collectionStats, defaultSave, loadSave, parseSave, persistSave, summonCards } from "./game/summon";
 import CardArtwork from "./components/CardArtwork";
+import CombatView from "./components/CombatView";
 import "./App.css";
 
 type CardStyle = CSSProperties & { "--rarity"?: string; "--order"?: number };
@@ -184,9 +185,11 @@ function App() {
             onClick={() => setTab("summon")}>✧ 카드 소환</button>
           <button role="tab" aria-selected={tab === "collection"} className={tab === "collection" ? "selected" : ""}
             onClick={() => setTab("collection")}>▣ 카드 도감 <span className="tab-counter">{stats.owned}/{stats.total}</span></button>
+          <button role="tab" aria-selected={tab === "combat"} className={tab === "combat" ? "selected" : ""}
+            onClick={() => setTab("combat")}>⚔ 기본 전투</button>
         </div>
 
-        {tab === "summon" ? (
+        {tab === "combat" ? <CombatView /> : tab === "summon" ? (
           <section className="summon-view" role="tabpanel">
             <div className="summon-hero">
               <div className="summon-hero-left">

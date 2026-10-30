@@ -1,6 +1,6 @@
 export type Rarity = "일반" | "희귀" | "영웅" | "전설" | "신화" | "초월" | "???";
 export type CardType = "유닛" | "마법";
-export type Tab = "summon" | "collection";
+export type Tab = "summon" | "collection" | "combat";
 
 export interface ChronicleCard {
   id: string;
