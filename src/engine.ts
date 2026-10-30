@@ -136,7 +136,7 @@ export function resolvePendingEffect(state:BattleState,lane:number):BattleState{
 export function playCard(state:BattleState,index:number,lane=0,stance:Stance='attack',guardSide?:0|2):BattleState {
   if(!canPlayCard(state,index,lane))return state;
   const incoming=state.players[state.active].hand[index];
-  if(incoming.type==='유닛'&&incoming.text.includes('도발')&&lane===1&&guardSide!==0&&guardSide!==2)return state;
+  if(lane===1&&(incoming.type==='유닛'&&incoming.text.includes('도발')||incoming.id==='S002')&&guardSide!==0&&guardSide!==2)return state;
   const next=structuredClone(state);
   const owner=next.active, p=next.players[owner], card=p.hand[index];
   p.mana-=card.cost;
@@ -168,7 +168,7 @@ export function playCard(state:BattleState,index:number,lane=0,stance:Stance='at
     p.grave.push(card);
     const ally=p.lanes[lane][0];
     if(card.id==='S001'&&ally)ally.hp=Math.min(ally.maxHp,ally.hp+3);
-    if(card.id==='S002'&&ally){ally.maxHp+=2;ally.hp+=2;ally.taunt=true;}
+    if(card.id==='S002'&&ally){ally.maxHp+=2;ally.hp+=2;ally.taunt=true;if(lane===1)ally.guardSide=guardSide;}
     if(card.id==='H004'&&ally)ally.hp=ally.maxHp;
     if(card.id==='S003'){
       next.players[1-owner].lanes.flat().forEach(unit=>{unit.hp-=2;});
