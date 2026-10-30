@@ -14,7 +14,7 @@ type CastleModel={
 type UnitModel={group:THREE.Group;key:string;spawnedAt:number;removedAt:number|null};
 
 const MAX_WALL=[8,9,8];
-const LANE_X=[-4.35,0,4.35];
+const LANE_X=[-6.6,0,6.6];
 const material=(hex:number,glow=0)=>new THREE.MeshStandardMaterial({
   color:hex,roughness:.75,metalness:.15,flatShading:true,
   emissive:glow,emissiveIntensity:glow?.12:0,
@@ -138,14 +138,14 @@ export default function Battlefield3D({battle}:{battle:BattleState}){
     light.position.set(-5,10,7);scene.add(light);
     const rim=new THREE.DirectionalLight(0x729fe2,1.6);
     rim.position.set(5,5,-6);scene.add(rim);
-    const field=new THREE.Mesh(new THREE.PlaneGeometry(18,11),floorStone);
+    const field=new THREE.Mesh(new THREE.PlaneGeometry(22,11),floorStone);
     field.rotation.x=-Math.PI/2;field.position.y=-.03;scene.add(field);
-    [-2.17,2.17].forEach(x=>{
+    [-3.3,3.3].forEach(x=>{
       const separator=new THREE.Mesh(new THREE.BoxGeometry(.035,.014,9),golden);
       separator.position.set(x,-.01,0);scene.add(separator);
     });
     [-.16,.16].forEach(z=>{
-      const center=new THREE.Mesh(new THREE.BoxGeometry(16,.012,.025),golden);
+      const center=new THREE.Mesh(new THREE.BoxGeometry(20,.012,.025),golden);
       center.position.set(0,.015,z);scene.add(center);
     });
     const castles:CastleModel[][]=[
@@ -194,13 +194,12 @@ export default function Battlefield3D({battle}:{battle:BattleState}){
     update.current(battle);
     const resize=()=>{
       const width=Math.max(1,mount.clientWidth),height=Math.max(1,mount.clientHeight);
-      const aspect=width/height,span=8.8;
-      camera.left=-span*aspect;camera.right=span*aspect;
-      camera.top=span;camera.bottom=-span;
-      // At wider aspect ratios use a fixed 16-unit horizontal stage span.
-      const scale=Math.min(1,aspect/2.75);
-      camera.left=-8.15/scale;camera.right=8.15/scale;
-      camera.top=4.45/scale;camera.bottom=-4.45/scale;
+      const aspect=width/height;
+      // Preserve correct 3D proportions while fitting all three lanes.
+      const verticalSpan=Math.max(6.9,18.2/aspect);
+      const halfHeight=verticalSpan/2;
+      camera.left=-halfHeight*aspect;camera.right=halfHeight*aspect;
+      camera.top=halfHeight;camera.bottom=-halfHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(width,height,false);
     };
