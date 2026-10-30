@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import type { CSSProperties } from "react";
+import type { CSSProperties, Dispatch, SetStateAction } from "react";
 import type { ChronicleCard, GameSave, Rarity, SummonResult, Tab } from "./foundationTypes";
 import { CARDS, CFG, RARITIES, rarityIndex, rarityOf } from "./foundationCards";
-import { collectionStats, defaultSave, loadSave, parseSave, persistSave, summonCards } from "./summon";
+import { collectionStats, defaultSave, parseSave, summonCards } from "./summon";
 import CardArtwork from "./CardArtwork";
 import "./foundation.css";
 
@@ -76,9 +76,12 @@ function RatesTable() {
   );
 }
 
-export function CollectionApp() {
-  const [game, setGame] = useState<GameSave>(loadSave);
-  const [tab, setTab] = useState<Tab>("summon");
+export function CollectionApp({ tab, game, setGame, developerMode }: {
+  tab: Tab;
+  game: GameSave;
+  setGame: Dispatch<SetStateAction<GameSave>>;
+  developerMode: boolean;
+}) {
   const [results, setResults] = useState<SummonResult[]>([]);
   const [message, setMessage] = useState("");
   const [openCard, setOpenCard] = useState<ChronicleCard | null>(null);
@@ -92,7 +95,6 @@ export function CollectionApp() {
   const closeButton = useRef<HTMLButtonElement>(null);
   const stats = collectionStats(game);
 
-  useEffect(() => { persistSave(game); }, [game]);
   useEffect(() => {
     if (!openCard) return;
     closeButton.current?.focus();
@@ -102,10 +104,11 @@ export function CollectionApp() {
   }, [openCard]);
 
   const summon = (count: number, price: number) => {
-    const outcome = summonCards(game, count, price);
+    const outcome = summonCards(game, count, price, developerMode);
     if (!outcome) { setMessage("💎 Gem이 부족합니다."); return; }
     setGame(outcome.next);
     setResults(outcome.results);
+    if (developerMode) { setMessage("💎 개발자 모드: GEM 소모 없이 소환했습니다!"); return; }
     setMessage(outcome.refund > 0
       ? `중복 환급 +${outcome.refund.toLocaleString()} Gem`
       : outcome.results.some(x => x.first) ? "새로운 카드가 도감에 등록되었습니다!" : "소환 완료!");
@@ -161,31 +164,8 @@ export function CollectionApp() {
   };
 
   return (
-    <div className="app">
-      <header className="topbar">
-        <div className="topbar-inner">
-          <div className="brand">
-            <span className="brand-emblem" aria-hidden="true">✦</span>
-            <div><span className="eyebrow">BREAK THE WALLS · ROLL THE DICE</span>
-              <h1>BTWRD <span>CHRONICLES</span></h1>
-              <div className="version">CARD COLLECTION · V0.2 REACT FOUNDATION</div>
-            </div>
-          </div>
-          <div className="gem-balance" aria-label={`보유 Gem ${game.gem.toLocaleString()}개`}>
-            <span className="gem-spark" aria-hidden="true">💎</span>
-            <div><small>보유 재화</small><strong>{game.gem.toLocaleString()} <em>GEM</em></strong></div>
-          </div>
-        </div>
-      </header>
-
+    <>
       <main className="main-shell">
-        <div className="menu-tabs" role="tablist" aria-label="메뉴">
-          <button role="tab" aria-selected={tab === "summon"} className={tab === "summon" ? "selected" : ""}
-            onClick={() => setTab("summon")}>✧ 카드 소환</button>
-          <button role="tab" aria-selected={tab === "collection"} className={tab === "collection" ? "selected" : ""}
-            onClick={() => setTab("collection")}>▣ 카드 도감 <span className="tab-counter">{stats.owned}/{stats.total}</span></button>
-        </div>
-
         {tab === "summon" ? (
           <section className="summon-view" role="tabpanel">
             <div className="summon-hero">
@@ -194,11 +174,11 @@ export function CollectionApp() {
                 <h2>영웅의 운명을 소환하라</h2>
                 <p>왕국의 전설, 신화와 초월의 존재까지. 새로운 이야기는 한 장의 카드에서 시작된다.</p>
                 <div className="summon-actions">
-                  <button className="summon-button secondary" disabled={game.gem < CFG.single}
+                  <button className="summon-button secondary" disabled={!developerMode && game.gem < CFG.single}
                     onClick={() => summon(1, CFG.single)}>
                     <span>1회 소환</span><strong>💎 {CFG.single} Gem</strong>
                   </button>
-                  <button className="summon-button primary" disabled={game.gem < CFG.multi}
+                  <button className="summon-button primary" disabled={!developerMode && game.gem < CFG.multi}
                     onClick={() => summon(CFG.multiCount, CFG.multi)}>
                     <span>10+1 연속 소환 <b>+1 BONUS</b></span><strong>💎 {CFG.multi.toLocaleString()} Gem</strong>
                   </button>
@@ -346,9 +326,6 @@ export function CollectionApp() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
-
-
-
