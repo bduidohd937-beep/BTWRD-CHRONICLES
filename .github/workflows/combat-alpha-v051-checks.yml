@@ -1,0 +1,25 @@
+name: Combat Alpha V0.5.1 UX regression
+on:
+  push:
+    branches:
+      - feature/combat-alpha-v051-combat-ux
+  workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Engine and battle UI regression tests
+        run: npm run test
+      - name: TypeScript check and production build
+        run: npm run build
