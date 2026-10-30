@@ -6,7 +6,7 @@ import CardArtwork from '../foundation/CardArtwork';
 
 const keywordDescriptions=[
   {key:'도발',description:'같은 전선의 적을 우선 방어하며, 위치에 따라 인접 전선도 보호합니다.'},
-  {key:'소환 시',description:'소환이 완료되면 조건에 따라 효과가 발동합니다.'},
+  {key:'소환 시',description:'소환이 완료되면 효과 발동 여부를 선택할 수 있습니다.'},
   {key:'공격 가능',description:'행동 가능한 공격 표시 유닛만 공격할 수 있습니다.'},
 ];
 
