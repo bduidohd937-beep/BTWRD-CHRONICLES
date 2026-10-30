@@ -11,7 +11,7 @@ type CastleModel={
   hitAt:number;
   collapsedAt:number;
 };
-type UnitModel={group:THREE.Group;key:string;spawnedAt:number;removedAt:number|null};
+type UnitModel={group:THREE.Group;key:string;spawnedAt:number;removedAt:number|null;lastHp:number;lastReady:boolean;hitAt:number;attackAt:number;owner:number};
 
 const MAX_WALL=[8,9,8];
 const LANE_X=[-6.6,0,6.6];
@@ -95,7 +95,7 @@ function unitMarker(owner:number,lane:number,unit:Unit,now:number):UnitModel{
     shield.position.set(0,.71,.43);group.add(shield);
   }
   group.scale.setScalar(.01);
-  return {group,key:owner+'-'+lane+'-'+unit.cardId,spawnedAt:now,removedAt:null};
+  return {group,key:owner+'-'+lane+'-'+unit.cardId+'-'+unit.stance,spawnedAt:now,removedAt:null,lastHp:unit.hp,lastReady:unit.canAttack,hitAt:-10,attackAt:-10,owner};
 }
 
 function disposeChildren(root:THREE.Object3D){
@@ -176,12 +176,18 @@ export default function Battlefield3D({battle}:{battle:BattleState}){
       for(let owner=0;owner<2;owner++)for(let lane=0;lane<3;lane++){
         const unit=state.players[owner].lanes[lane][0];
         if(!unit)continue;
-        const key=owner+'-'+lane+'-'+unit.cardId;
+        const key=owner+'-'+lane+'-'+unit.cardId+'-'+unit.stance;
         desired.add(key);
         if(!markers.has(key)){
           const marker=unitMarker(owner,lane,unit,now);
           markers.set(key,marker);
           scene.add(marker.group);
+        }else{
+          const marker=markers.get(key)!;
+          if(unit.hp<marker.lastHp)marker.hitAt=now;
+          if(marker.lastReady&&!unit.canAttack&&unit.stance==='attack')marker.attackAt=now;
+          marker.lastHp=unit.hp;
+          marker.lastReady=unit.canAttack;
         }
       }
       for(const [key,marker] of markers)if(!desired.has(key)){
@@ -227,7 +233,15 @@ export default function Battlefield3D({battle}:{battle:BattleState}){
         const elapsed=reduceMotion?2:now-marker.spawnedAt;
         const factor=Math.min(1,Math.max(.01,elapsed*3.5));
         marker.group.scale.setScalar(factor);
-        if(!reduceMotion)marker.group.position.y=.02+Math.sin(now*2)*.035;
+        if(!reduceMotion){
+          const hit=now-marker.hitAt;
+          const swing=now-marker.attackAt;
+          const shake=hit>=0&&hit<.4?Math.sin(hit*43)*.1*(1-hit/.4):0;
+          const lunge=swing>=0&&swing<.42?Math.sin(Math.PI*swing/.42)*.5:0;
+          marker.group.position.x=(LANE_X[Number(marker.key.split('-')[1])]??0)+shake;
+          marker.group.position.y=.02+Math.sin(now*2)*.035;
+          marker.group.position.z=(marker.owner===0?.65:-.65)+(marker.owner===0?-lunge:lunge);
+        }
       }
       for(let i=dying.length-1;i>=0;i--){
         const marker=dying[i];
