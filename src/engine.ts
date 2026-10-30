@@ -36,18 +36,51 @@ export function guardCovers(unit:Unit,unitLane:number,protectedLane:number):bool
   return protectedLane===unit.guardSide;
 }
 
+/**
+ * Legal targets for this unit's single basic attack.
+ *
+ * The legacy wallLane is kept for ordinary same-lane attacks. When the opposite
+ * wall has already fallen, siege rule A opens wallLanes for other active lanes,
+ * with no attack or mana penalty. Each destination still respects its own
+ * defender and any taunt protecting that destination. No wall can be bypassed
+ * through its defenders.
+ */
 export function legalAttackTargets(state:BattleState,lane:number,unitIndex=0):{
-  unitLanes:number[];wallLane:number|null
+  unitLanes:number[];wallLane:number|null;wallLanes?:number[]
 }{
   const empty={unitLanes:[] as number[],wallLane:null};
   if(!canAct(state)||!isLane(lane))return empty;
   const attacker=state.players[state.active].lanes[lane][unitIndex];
   if(!attacker||!attacker.canAttack||attacker.stance!=='attack')return empty;
   const enemy=state.players[1-state.active];
+
+  // A defender standing directly opposite must be fought before breaking out.
   if(enemy.lanes[lane].length>0)return {unitLanes:[lane],wallLane:null};
   const guards=[0,1,2].filter(i=>enemy.lanes[i].some(u=>guardCovers(u,i,lane)));
   if(guards.length>0)return {unitLanes:guards,wallLane:null};
-  return {unitLanes:[],wallLane:enemy.walls[lane]>0?lane:null};
+
+  // Before the opposite wall falls, keep the original same-lane attack rule.
+  if(enemy.walls[lane]>0)return {unitLanes:[],wallLane:lane};
+
+  // A — free breakthrough: any remaining active wall may be targeted, even
+  // at a non-adjacent lane, without extra mana or reduced damage.
+  const unitLanes=new Set<number>();
+  const wallLanes:number[]=[];
+  for(let targetLane=0;targetLane<3;targetLane++){
+    if(enemy.walls[targetLane]<=0)continue;
+    if(enemy.lanes[targetLane].length>0){
+      unitLanes.add(targetLane);
+      continue;
+    }
+    const interceptors=[0,1,2].filter(i=>
+      enemy.lanes[i].some(u=>guardCovers(u,i,targetLane)));
+    if(interceptors.length){
+      interceptors.forEach(i=>unitLanes.add(i));
+    }else{
+      wallLanes.push(targetLane);
+    }
+  }
+  return {unitLanes:[...unitLanes],wallLane:null,wallLanes};
 }
 
 
@@ -201,7 +234,8 @@ export function attackUnit(
   if(!canAct(state)||!isLane(lane)||!isLane(targetLane))return state;
   const targets=legalAttackTargets(state,lane,unitIndex);
   const canAttackUnit=targetUnitIndex===0&&targets.unitLanes.includes(targetLane);
-  const canAttackWall=targetUnitIndex===null&&targets.wallLane===targetLane;
+  const canAttackWall=targetUnitIndex===null&&
+    (targets.wallLane===targetLane||!!targets.wallLanes?.includes(targetLane));
   if(!canAttackUnit&&!canAttackWall)return state;
   const next=structuredClone(state);
   const own=next.players[next.active],enemy=next.players[1-next.active];
@@ -216,7 +250,10 @@ export function attackUnit(
     clearDead(next);
   }else{
     enemy.walls[targetLane]=Math.max(0,enemy.walls[targetLane]-attacker.atk);
-    next.log.unshift(own.name+': '+WALL_NAMES[targetLane]+' 성벽에 '+attacker.atk+' 피해');
+    const breakthrough=targetLane!==lane;
+    next.log.unshift(own.name+': '+attacker.name+
+      (breakthrough?' 자유 돌파 공성 ('+WALL_NAMES[lane]+' → '+WALL_NAMES[targetLane]+')':'')+
+      ' · '+WALL_NAMES[targetLane]+' 성벽에 '+attacker.atk+' 피해 (추가 마나·공격력 페널티 없음)');
     if(enemy.walls.every(w=>w===0)){
       next.winner=own.name;
       next.log.unshift(own.name+' 세 성벽 붕괴 승리!');
