@@ -111,6 +111,7 @@ describe('BTWRD DRAFT 1.9.5 core battle invariants',()=>{
   it('casts limited implemented simple spells, leaving invalid spells unchanged',()=>{
     let b=newBattle(cards);
     b.players[0].lanes[1]=[troop('U001',{hp:1,maxHp:4})];
+    b.players[0].mana=4;
     b.players[0].hand=[{...card('S001')},{...card('S002')}];
     expect(canPlayCard(b,0,1)).toBe(true);
     b=playCard(b,0,1);
