@@ -1,6 +1,7 @@
 import {useState} from 'react';
 import type {CSSProperties} from 'react';
 import type {BattleState,Card,Player,Stance} from '../types';
+import type {Rarity} from '../foundation/foundationTypes';
 import {CARDS as cards,rarityOf} from '../foundation/foundationCards';
 import CardArtwork from '../foundation/CardArtwork';
 import {
@@ -219,7 +220,7 @@ export default function BattleApp({battle,setBattle}:{
       {player.hand.map((card,i)=>{
         const disabled=!battle.discarding&&(!!battle.winner||!!battle.pendingRetreat||
           player.mana<card.cost||(card.type==='마법'&&!SUPPORTED_SPELLS.has(card.id)));
-        const rarity=rarityOf(card.rarity).color;
+        const rarity=rarityOf(card.rarity as Rarity).color;
         return <button key={i} type="button" className={`battle-hand-card ${chosenCard===i?'chosen':''}`}
           style={{'--rarity':rarity} as CSSProperties} disabled={disabled}
           onClick={()=>chooseCard(i)} title={card.text}>
