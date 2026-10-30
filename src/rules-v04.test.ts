@@ -129,7 +129,7 @@ describe('COMBAT V0.4 — magic slot foundation',()=>{
     expect(b.players[1].spellZones).toEqual([null,null,null]);
   });
 
-  it('sends an installed spell from a collapsed wall lane to the owner's grave',()=>{
+  it('sends an installed spell from a collapsed wall lane to the defending grave',()=>{
     let b=newBattle(cards);
     b.players[0].lanes[0]=[troop('U001',{canAttack:true})];
     b.players[1].walls[0]=1;
