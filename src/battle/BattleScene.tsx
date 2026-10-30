@@ -36,7 +36,7 @@ export default function BattleScene({battle,setBattle,onExit,onNewBattle}:{
         <span className="battle-scene-brandmark" aria-hidden="true">✦</span>
         <div>
           <strong>BTWRD <span>CHRONICLES</span></strong>
-          <small>COMBAT ALPHA V0.4.1 · 3D BATTLE</small>
+          <small>COMBAT ALPHA V0.5.0 · FULL FIELD</small>
         </div>
       </div>
       <div className="battle-scene-navigation">
