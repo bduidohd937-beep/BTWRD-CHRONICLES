@@ -177,6 +177,40 @@ export default function Battlefield3D({battle}:{battle:BattleState}){
     );
     frontline.position.set(0,.018,0);
     decorations.add(frontline);
+    // Shared field-magic seal: reserved battlefield-wide zone, intentionally
+    // visual-only until ownership, activation and replacement rules are approved.
+    // It sits at the world center and is visible even behind the DOM label.
+    const fieldSeal=new THREE.Group();
+    const outerSeal=new THREE.Mesh(
+      new THREE.RingGeometry(.87,.915,48),
+      new THREE.MeshBasicMaterial({
+        color:0xf2d49a,transparent:true,opacity:.72,side:THREE.DoubleSide,
+      }),
+    );
+    outerSeal.rotation.x=-Math.PI/2;
+    outerSeal.position.y=.055;
+    fieldSeal.add(outerSeal);
+    const innerSeal=new THREE.Mesh(
+      new THREE.RingGeometry(.55,.585,8),
+      new THREE.MeshBasicMaterial({
+        color:0xb19beb,transparent:true,opacity:.58,side:THREE.DoubleSide,
+      }),
+    );
+    innerSeal.rotation.x=-Math.PI/2;
+    innerSeal.position.y=.058;
+    fieldSeal.add(innerSeal);
+    // Independent facets evoke a dormant enchantment rather than an active spell.
+    for(let i=0;i<8;i++){
+      const theta=i*Math.PI/4;
+      const facet=new THREE.Mesh(
+        new THREE.BoxGeometry(.12,.012,.035),
+        new THREE.MeshBasicMaterial({color:0xe1bb7e,transparent:true,opacity:.65}),
+      );
+      facet.position.set(Math.cos(theta)*1.02,.06,Math.sin(theta)*1.02);
+      facet.rotation.y=-theta;
+      fieldSeal.add(facet);
+    }
+    decorations.add(fieldSeal);
     const castles:CastleModel[][]=[
       MAX_WALL.map((_,i)=>castle(0,i)),
       MAX_WALL.map((_,i)=>castle(1,i)),
