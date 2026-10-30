@@ -1,0 +1,25 @@
+name: Combat Alpha V0.5.2 free-breakthrough A regressions
+on:
+  push:
+    branches:
+      - feature/combat-alpha-v052-free-breakthrough
+  workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install pinned dependencies
+        run: npm ci
+      - name: Combat engine, UI and collection regression tests
+        run: npm run test
+      - name: TypeScript compile and production build
+        run: npm run build
