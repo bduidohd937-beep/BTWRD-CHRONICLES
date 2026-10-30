@@ -78,7 +78,8 @@ function castle(owner:number,lane:number):CastleModel{
 
 function unitMarker(owner:number,lane:number,unit:Unit,now:number):UnitModel{
   const group=new THREE.Group();
-  group.position.set(LANE_X[lane],.03,owner===0?2.3:-2.3);
+  // Figures stand closer to the center line, with their card slots fixed behind them.
+  group.position.set(LANE_X[lane],.03,owner===0?.85:-.85);
   const base=owner===0?0x4cbbb5:0xce748e;
   const baseMat=material(base);
   const stone=material(0x262239);
@@ -88,10 +89,11 @@ function unitMarker(owner:number,lane:number,unit:Unit,now:number):UnitModel{
   body.position.y=.58;group.add(body);
   const crown=new THREE.Mesh(new THREE.ConeGeometry(.33,.46,5),golden);
   crown.position.y=1.18;group.add(crown);
-  const ring=new THREE.Mesh(new THREE.TorusGeometry(.49,.035,5,24),golden);
+  const stanceMat=material(unit.stance==='defense'?0x72caff:0xec8583);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(.53,.055,6,28),stanceMat);
   ring.rotation.x=Math.PI/2;ring.position.y=.18;group.add(ring);
   if(unit.stance==='defense'){
-    const shield=new THREE.Mesh(new THREE.BoxGeometry(.48,.65,.12),trimA);
+    const shield=new THREE.Mesh(new THREE.BoxGeometry(.48,.65,.12),stanceMat);
     shield.position.set(0,.71,.43);group.add(shield);
   }
   group.scale.setScalar(.01);
@@ -267,7 +269,7 @@ export default function Battlefield3D({battle}:{battle:BattleState}){
           const lunge=swing>=0&&swing<.42?Math.sin(Math.PI*swing/.42)*.5:0;
           marker.group.position.x=(LANE_X[Number(marker.key.split('-')[1])]??0)+shake;
           marker.group.position.y=.02+Math.sin(now*2)*.035;
-          marker.group.position.z=(marker.owner===0?2.3:-2.3)+(marker.owner===0?-lunge:lunge);
+          marker.group.position.z=(marker.owner===0?.85:-.85)+(marker.owner===0?-lunge:lunge);
         }
       }
       for(let i=dying.length-1;i>=0;i--){
