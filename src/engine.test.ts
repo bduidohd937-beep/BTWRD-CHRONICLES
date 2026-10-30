@@ -116,7 +116,7 @@ describe('BTWRD DRAFT 1.9.5 core battle invariants',()=>{
     expect(canPlayCard(b,0,1)).toBe(true);
     b=playCard(b,0,1);
     expect(b.players[0].lanes[1][0].hp).toBe(4);
-    b=playCard(b,0,1);
+    b=playCard(b,0,1,'attack',0);
     expect(b.players[0].lanes[1][0].maxHp).toBe(6);
     expect(b.players[0].lanes[1][0].taunt).toBe(true);
   });
