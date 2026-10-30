@@ -196,7 +196,8 @@ export default function BattleApp({battle,setBattle}:{
       title:original.name+(original.type==='유닛'?' 소환':' 발동'),
       details:original.type==='유닛'?
         LANE_NAMES[pendingPlay.lane]+' 전선 · '+(summonStance==='defense'?'수비 표시':'공격 표시'):
-        '대상 '+(target?.name??'전체')+' · '+original.text,
+        globalSpell(original)?'전체 효과 · '+original.text:
+        '대상 '+(target?.name??'유닛')+' · '+original.text,
       fromOwner:sourceOwner,fromLane:pendingPlay.lane,
       toOwner:sourceOwner,toLane:pendingPlay.lane,
       kind:original.type==='유닛'?'summon':'spell',
