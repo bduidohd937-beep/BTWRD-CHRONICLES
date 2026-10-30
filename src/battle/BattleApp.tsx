@@ -1,7 +1,7 @@
 import {useState} from 'react';
 import type {BattleState,Card,Stance} from '../types';
 import {
-  attackUnit,canPlayCard,changeStance,discardCard,endTurn,playCard,
+  attackUnit,changeStance,discardCard,endTurn,playCard,
   resolveRetreat,resolvePendingEffect,SUPPORTED_SPELLS,
 } from '../engine';
 import Battlefield3D from '../graphics/Battlefield3D';
