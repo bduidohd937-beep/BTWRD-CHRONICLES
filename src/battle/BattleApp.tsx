@@ -254,8 +254,9 @@ export default function BattleApp({battle,setBattle}:{
     });
     const breakthrough=target===null&&chosenUnit.lane!==lane;
     setMessage(victim?attacker.name+'의 공격으로 '+victim.name+'이(가) 피해 '+damage+'를 받았습니다.':
-      (breakthrough?'자유 돌파! '+LANE_NAMES[chosenUnit.lane]+' → ':'')+
-      LANE_NAMES[lane]+' 성벽에 피해 '+damage+'! 추가 마나·공격력 페널티 없음.');
+      breakthrough?'자유 돌파! '+LANE_NAMES[chosenUnit.lane]+' → '+LANE_NAMES[lane]+
+        ' 성벽에 피해 '+damage+'! 추가 마나·공격력 페널티 없음.':
+        LANE_NAMES[lane]+' 성벽에 피해 '+damage+'!');
   };
 
   const resolveEffect=(lane:number)=>{
