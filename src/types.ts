@@ -23,8 +23,24 @@ export interface Unit {
   taunt:boolean;
   stance:Stance;
   temporaryAttack:number;
+  /** Center-lane taunt may guard one chosen adjacent side. */
+  guardSide?:0|2;
+  /** Number of this unit's own turns to skip because of disable effects. */
+  stunnedTurns?:number;
 }
 
+export interface InstalledSpell {
+  cardId:string;
+  name:string;
+  kind:'continuous'|'equipment';
+  equippedUnitCardId?:string;
+}
+export interface PendingEffect {
+  owner:number;
+  sourceCardId:string;
+  type:'enemy-damage'|'ally-heal'|'enemy-disable';
+  amount:number;
+}
 export interface Player {
   name:string;
   // Kept for compatibility with legacy prototype state; only wall HP determines combat victory.
@@ -35,6 +51,8 @@ export interface Player {
   deck:Card[];
   hand:Card[];
   grave:Card[];
+  /** One installed magic slot per active lane; currently only reserved, not activated. */
+  spellZones:(InstalledSpell|null)[];
   lanes:Unit[][];
   walls:number[];
 }
@@ -47,4 +65,5 @@ export interface BattleState {
   winner?:string;
   discarding?:boolean;
   pendingRetreat?:{owner:number;from:number};
+  pendingEffect?:PendingEffect;
 }
