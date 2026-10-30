@@ -44,32 +44,50 @@ afterEach(async()=>{
   host.remove();
 });
 
-describe('V0.5.3 source-to-target summon effect prompts',()=>{
-  it('renders mandatory banner and highlights an eligible enemy without a skip control',async()=>{
+describe('V0.5.4 elective on-summon flow and compact target prompts',()=>{
+  it('shows activate and skip, keeps enemy target disabled until activation, and resolves after click',async()=>{
     await act(async()=>root.render(<AppHarness/>));
     const prompt=host.querySelector('.field-effect-pending')!;
     expect(prompt).not.toBeNull();
-    expect(prompt.textContent).toContain('발동 필수');
     expect(prompt.textContent).toContain('왕국 궁수');
-    expect(prompt.textContent).toContain('빛나는 적 유닛');
-    expect(prompt.querySelector('.field-effect-decline')).toBeNull();
-    const target=host.querySelector('button[data-zone="unit"][data-owner="1"][data-lane="1"]') as HTMLButtonElement;
-    expect(target.className).toContain('field-zone-target');
-    await act(async()=>target.click());
+    expect(prompt.textContent).toContain('효과 발동');
+    expect(prompt.textContent).toContain('넘기기');
+    const target=()=>host.querySelector('button[data-zone="unit"][data-owner="1"][data-lane="1"]') as HTMLButtonElement;
+    expect(target().className).not.toContain('field-zone-target');
+    expect(target().disabled).toBe(false); // Still inspectable, not a legal effect target.
+    await act(async()=>Array.from(prompt.querySelectorAll('button')).find(b=>b.textContent?.includes('효과 발동'))!.click());
+    expect(latest.pendingEffect?.awaitingChoice).toBe(false);
+    expect(target().className).toContain('field-zone-target');
+    expect(host.querySelector('.field-effect-pending')?.textContent).toContain('발동 취소');
+    await act(async()=>target().click());
     expect(latest.pendingEffect).toBeUndefined();
     expect(host.querySelector('.field-effect-pending')).toBeNull();
     expect(host.querySelector('.field-effect-caption')?.textContent).toContain('왕국 궁수 소환 효과');
+    expect(latest.players[1].lanes[1]).toHaveLength(0);
+    expect(latest.players[0].mana).toBe(0);
   });
-  it('offers a skip button only for explicitly optional printed effect text',async()=>{
-    await act(async()=>root.render(<AppHarness optional/>));
-    const prompt=host.querySelector('.field-effect-pending')!;
-    expect(prompt.textContent).toContain('선택 가능');
-    const skip=prompt.querySelector('.field-effect-decline') as HTMLButtonElement;
+
+  it('lets player skip original on-summon effects without refunding spent mana',async()=>{
+    await act(async()=>root.render(<AppHarness/>));
+    const skip=host.querySelector('.field-effect-decline') as HTMLButtonElement;
     expect(skip).not.toBeNull();
+    expect(skip.textContent).toContain('넘기기');
     await act(async()=>skip.click());
     expect(latest.pendingEffect).toBeUndefined();
     expect(latest.players[1].lanes[1]).toHaveLength(1);
     expect(latest.players[0].mana).toBe(0);
     expect(host.querySelector('.field-effect-pending')).toBeNull();
+  });
+
+  it('lets player cancel targeting after choosing activation',async()=>{
+    await act(async()=>root.render(<AppHarness optional/>));
+    const accept=Array.from(host.querySelectorAll('.field-effect-pending button'))
+      .find(el=>el.textContent?.includes('효과 발동')) as HTMLButtonElement;
+    await act(async()=>accept.click());
+    expect(latest.pendingEffect?.awaitingChoice).toBe(false);
+    const cancel=host.querySelector('.field-effect-decline') as HTMLButtonElement;
+    await act(async()=>cancel.click());
+    expect(latest.pendingEffect).toBeUndefined();
+    expect(latest.players[1].lanes[1]).toHaveLength(1);
   });
 });
