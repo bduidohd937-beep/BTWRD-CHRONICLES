@@ -222,8 +222,10 @@ export default function BattleApp({battle,setBattle}:{
     const next=chosenUnit?.lane===lane?null:{lane,index:0};
     setChosenUnit(next);
     const unit=player.lanes[lane][0];
+    const oppositeWall=battle.players[1-battle.active].walls[lane];
     setMessage(next===null?'유닛 선택 취소':
       unit?.stance==='defense'?'수비 표시 유닛입니다. 행동권이 있으면 표시 전환을 할 수 있습니다.':
+      oppositeWall===0?'자유 돌파! 다른 활성 성벽을 공격할 수 있습니다. 적 유닛과 도발은 우선 처리해야 합니다.':
       '합법적인 공격 대상만 빛납니다. 유닛 또는 성벽을 선택해 공격하세요.');
   };
 
@@ -250,8 +252,10 @@ export default function BattleApp({battle,setBattle}:{
       toOwner:1-battle.active,toLane:lane,
       amount:'−'+damage,kind:'attack',
     });
+    const breakthrough=target===null&&chosenUnit.lane!==lane;
     setMessage(victim?attacker.name+'의 공격으로 '+victim.name+'이(가) 피해 '+damage+'를 받았습니다.':
-      LANE_NAMES[lane]+' 성벽에 피해 '+damage+'!');
+      (breakthrough?'자유 돌파! '+LANE_NAMES[chosenUnit.lane]+' → ':'')+
+      LANE_NAMES[lane]+' 성벽에 피해 '+damage+'! 추가 마나·공격력 페널티 없음.');
   };
 
   const resolveEffect=(lane:number)=>{
