@@ -38,19 +38,25 @@ function InstalledSpellZone({player,lane}: {player:Player;lane:number}){
   </div>;
 }
 
-function WallZone({owner,player,lane,canHitWall,onStrike}:{
-  owner:number;player:Player;lane:number;canHitWall:boolean;
+function WallZone({owner,player,lane,canHitWall,breakthrough,onStrike}:{
+  owner:number;player:Player;lane:number;canHitWall:boolean;breakthrough:boolean;
   onStrike:(lane:number,target:number|null)=>void;
 }){
   const hp=player.walls[lane];
   return <button type="button" data-zone="wall" data-owner={owner} data-lane={lane}
-    className={['field-wall-zone',hp<=0?'field-zone-closed':'',canHitWall?'field-zone-target':''].join(' ')}
+    className={['field-wall-zone',hp<=0?'field-zone-closed':'',
+      canHitWall?'field-zone-target':'',breakthrough?'field-wall-breakthrough':''].join(' ')}
+    data-breakthrough={breakthrough?'true':'false'}
     disabled={!canHitWall}
     onClick={()=>onStrike(lane,null)}
-    aria-label={player.name+' '+names[lane]+' 성벽 HP '+hp+'/'+maxWalls[lane]}>
+    title={breakthrough?'자유 돌파 공성 · 추가 마나 또는 공격력 페널티 없음':
+      canHitWall?'이 성벽 공격':'성벽 HP '+hp+'/'+maxWalls[lane]}
+    aria-label={player.name+' '+names[lane]+' 성벽 HP '+hp+'/'+maxWalls[lane]+
+      (breakthrough?' · 자유 돌파 공격 가능':'')}>
     <span className="field-wall-symbol" aria-hidden="true">♜</span>
     <span className="field-wall-name">{names[lane]} 성벽</span>
     <strong>{hp}/{maxWalls[lane]}</strong>
+    {breakthrough&&<span className="field-breakthrough-indicator" aria-hidden="true">↗</span>}
     <span className="field-wall-meter"><i style={{width:hp/maxWalls[lane]*100+'%'}}/></span>
   </button>;
 }
@@ -138,7 +144,11 @@ function PlayerFormation({battle,owner,chosenCard,chosenUnit,onPlay,onStrike,onC
         const canSpellTarget=!!unit&&!!targetSpell&&canDeploy;
         const canChoose=active&&!battle.discarding&&!effect&&!battle.pendingRetreat&&!!unit&&unit.canAttack;
         const canHit=!!unit&&!active&&!!legal?.unitLanes.includes(lane);
-        const canHitWall=!active&&legal?.wallLane===lane;
+        const canHitWall=!active&&
+          (legal?.wallLane===lane||!!legal?.wallLanes?.includes(lane));
+        const breakthrough=canHitWall&&chosenUnit!==null&&
+          chosenUnit.lane!==lane&&
+          battle.players[battle.active].lanes[chosenUnit.lane]?.length>0;
         const canResolve=!!unit&&!!effect&&effectOwner===owner&&eligible.includes(lane);
         const canRetreat=!!battle.pendingRetreat&&battle.pendingRetreat.owner===owner&&
           battle.pendingRetreat.from!==lane&&player.walls[lane]>0&&!unit;
@@ -148,7 +158,7 @@ function PlayerFormation({battle,owner,chosenCard,chosenUnit,onPlay,onStrike,onC
           style={{'--field-index':lane} as CSSProperties}>
           {owner===1?<>
             <WallZone owner={owner} player={player} lane={lane}
-              canHitWall={canHitWall} onStrike={onStrike}/>
+              canHitWall={canHitWall} breakthrough={!!breakthrough} onStrike={onStrike}/>
             <InstalledSpellZone player={player} lane={lane}/>
           </>:null}
           <UnitZone owner={owner} lane={lane} unit={unit} player={player}
@@ -162,7 +172,7 @@ function PlayerFormation({battle,owner,chosenCard,chosenUnit,onPlay,onStrike,onC
           {owner===0?<>
             <InstalledSpellZone player={player} lane={lane}/>
             <WallZone owner={owner} player={player} lane={lane}
-              canHitWall={canHitWall} onStrike={onStrike}/>
+              canHitWall={canHitWall} breakthrough={!!breakthrough} onStrike={onStrike}/>
           </>:null}
           {canChoose&&<span className="field-ready-marker" aria-hidden="true">●</span>}
         </div>;
