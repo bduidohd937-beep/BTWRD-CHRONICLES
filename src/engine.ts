@@ -150,6 +150,27 @@ const summonTrigger=(state:BattleState,owner:number,cardId:string):PendingEffect
   return [0,1,2].some(lane=>validPendingTarget(state,effect,lane))?effect:undefined;
 };
 
+/**
+ * An effect can be skipped only when its printed card text explicitly grants
+ * a choice. Current summon effects are mandatory; do not silently turn them
+ * into optional effects. This guard also supports future opt-in card text.
+ */
+export function isPendingEffectOptional(state:BattleState):boolean {
+  const pending=state.pendingEffect;
+  if(!pending)return false;
+  const printedText=cardById(pending.sourceCardId)?.text??'';
+  return /(?:할 수 있다|선택하여 발동|발동해도 된다)/.test(printedText);
+}
+
+export function skipPendingEffect(state:BattleState):BattleState {
+  if(!state.pendingEffect||state.winner||!isPendingEffectOptional(state))return state;
+  const next=structuredClone(state);
+  const name=cardById(next.pendingEffect!.sourceCardId)?.name??next.pendingEffect!.sourceCardId;
+  delete next.pendingEffect;
+  next.log.unshift(name+': 선택 소환 효과를 발동하지 않음');
+  return next;
+}
+
 export function resolvePendingEffect(state:BattleState,lane:number):BattleState{
   const pending=state.pendingEffect;
   if(!pending||state.winner||!validPendingTarget(state,pending,lane))return state;
