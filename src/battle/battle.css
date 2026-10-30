@@ -195,3 +195,19 @@
   .arena-target:not(:disabled){animation:none}
   .battle-hand-card{transition:none}
 }
+
+/* V0.4: show three distinct magic slots without claiming installed spell rules exist. */
+.arena-magic-slot{
+  display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  margin:4px 0 0;padding:3px 5px;
+  font-size:9px;line-height:1.2;letter-spacing:.2px;
+  color:#c7afdc;border:1px dashed #66507d;border-radius:4px;
+  background:#1e172cbb;pointer-events:none;
+}
+@media(min-width:900px){
+  .combat-arena{height:436px}
+}
+@media(max-width:620px){
+  .combat-arena{height:448px}
+  .arena-magic-slot{font-size:8px}
+}
