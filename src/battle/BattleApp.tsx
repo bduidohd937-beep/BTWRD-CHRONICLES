@@ -6,7 +6,7 @@ import {CARDS as cards,rarityOf} from '../foundation/foundationCards';
 import CardArtwork from '../foundation/CardArtwork';
 import {
   attackUnit,canPlayCard,changeStance,discardCard,endTurn,playCard,
-  resolveRetreat,SUPPORTED_SPELLS,
+  resolveRetreat,resolvePendingEffect,legalAttackTargets,eligibleEffectLanes,SUPPORTED_SPELLS,
 } from '../engine';
 import Battlefield3D from '../graphics/Battlefield3D';
 import './battle.css';
@@ -15,7 +15,8 @@ const laneNames=['좌측','중앙','우측'];
 const MAX_WALL=[8,9,8];
 type ChosenUnit={lane:number;index:number};
 
-function TeamHud({player,owner,battle,chosenCard,chosenUnit,onPlace,onStrike,onChooseUnit}:{
+
+function TeamHud({player,owner,battle,chosenCard,chosenUnit,onPlace,onStrike,onChooseUnit,onResolveEffect}:{
   player:Player;
   owner:number;
   battle:BattleState;
@@ -24,11 +25,16 @@ function TeamHud({player,owner,battle,chosenCard,chosenUnit,onPlace,onStrike,onC
   onPlace:(lane:number)=>void;
   onStrike:(lane:number,target:number|null)=>void;
   onChooseUnit:(lane:number)=>void;
+  onResolveEffect:(lane:number)=>void;
 }) {
   const active=battle.active===owner;
   const current=chosenCard===null?null:battle.players[battle.active].hand[chosenCard];
   const targetSpell=current?.type==='마법'&&(current.id==='S001'||current.id==='S002'||current.id==='H004');
-  return <section className={`arena-team ${active?'arena-team-active':''} ${owner===1?'arena-team-enemy':'arena-team-ally'}`}>
+  const legalTargets=chosenUnit?legalAttackTargets(battle,chosenUnit.lane,chosenUnit.index):null;
+  const effect=battle.pendingEffect;
+  const effectOwner=effect?(effect.type==='ally-heal'?effect.owner:1-effect.owner):null;
+  const eligible=eligibleEffectLanes(battle);
+  return <section className={['arena-team',active?'arena-team-active':'',owner===1?'arena-team-enemy':'arena-team-ally'].join(' ')}>
     <div className="arena-team-header">
       <span><strong>{player.name}</strong> {active&&<em className="arena-turn-label">행동 중</em>}</span>
       <span>덱 {player.deck.length} · 손패 {player.hand.length} · 묘지 {player.grave.length}</span>
@@ -37,32 +43,45 @@ function TeamHud({player,owner,battle,chosenCard,chosenUnit,onPlace,onStrike,onC
       {player.lanes.map((lane,i)=>{
         const unit=lane[0];
         const wall=player.walls[i];
-        const isTarget=owner!==battle.active&&chosenUnit?.lane===i&&battle.players[battle.active].lanes[i][chosenUnit.index]?.stance==='attack';
-        const canHitWall=isTarget&&wall>0&&!unit;
-        const canHitUnit=isTarget&&!!unit;
-        const canDeploy=owner===battle.active&&chosenCard!==null&&canPlayCard(battle,chosenCard,i);
-        const canSelect=owner===battle.active&&!!unit&&unit.canAttack&&!battle.pendingRetreat&&!battle.discarding;
+        const canHitWall=owner!==battle.active&&legalTargets?.wallLane===i&&wall>0;
+        const canHitUnit=owner!==battle.active&&!!unit&&!!legalTargets?.unitLanes.includes(i);
+        const canResolveEffect=!!effect&&effectOwner===owner&&!!unit&&eligible.includes(i);
+        const canDeploy=active&&chosenCard!==null&&canPlayCard(battle,chosenCard,i);
+        const canSelect=active&&!!unit&&unit.canAttack&&!battle.pendingRetreat&&!battle.discarding&&!effect;
         const canSpellTarget=!!unit&&!!targetSpell&&canDeploy;
         const canRetreat=!!battle.pendingRetreat&&battle.pendingRetreat.owner===owner&&wall>0&&!unit&&battle.pendingRetreat.from!==i;
-        return <div key={i} className={`arena-lane ${canDeploy?'arena-lane-deploy':''}`}>
-          <button type="button" className={`arena-wall ${wall===0?'arena-wall-down':''} ${canHitWall?'arena-target':''}`}
+        const installed=player.spellZones[i];
+        return <div key={i} className={['arena-lane',canDeploy?'arena-lane-deploy':''].join(' ')}>
+          <button type="button"
+            className={['arena-wall',wall===0?'arena-wall-down':'',canHitWall?'arena-target':''].join(' ')}
             disabled={!canHitWall} onClick={()=>onStrike(i,null)}
-            aria-label={`${player.name} ${laneNames[i]} 성벽 HP ${wall}/${MAX_WALL[i]}`}>
+            aria-label={player.name+' '+laneNames[i]+' 성벽 HP '+wall+'/'+MAX_WALL[i]}>
             <span>♜ {laneNames[i]} 성벽</span><strong>{wall}/{MAX_WALL[i]}</strong>
-            <span className="arena-wall-track"><i style={{width:`${wall/MAX_WALL[i]*100}%`}}/></span>
+            <span className="arena-wall-track"><i style={{width:(wall/MAX_WALL[i]*100)+'%'}}/></span>
           </button>
           {unit?<button type="button"
-            className={`arena-unit ${canSelect?'arena-ready':''} ${canHitUnit||canSpellTarget?'arena-target':''} ${chosenUnit?.lane===i&&active?'arena-selected':''}`}
-            disabled={!(canSelect||canHitUnit||canSpellTarget)}
-            onClick={()=>owner===battle.active?(canSpellTarget?onPlace(i):onChooseUnit(i)):onStrike(i,0)}
-            title={unit.stance==='defense'?'수비 표시 · 받는 전투 피해 반감':'공격 표시'}>
+            className={['arena-unit',canSelect?'arena-ready':'',
+              canHitUnit||canSpellTarget||canResolveEffect?'arena-target':'',
+              chosenUnit?.lane===i&&active?'arena-selected':''].join(' ')}
+            disabled={!(canSelect||canHitUnit||canSpellTarget||canResolveEffect)}
+            onClick={()=>canResolveEffect?onResolveEffect(i):
+              active?(canSpellTarget?onPlace(i):onChooseUnit(i)):onStrike(i,0)}
+            title={canResolveEffect?'소환 효과 대상 선택':
+              unit.stance==='defense'?'수비 표시 · 전투 피해 반감':'공격 표시'}>
             <span className="arena-unit-name">{unit.stance==='defense'?'🛡':'⚔'} {unit.name}</span>
-            <small>ATK {unit.atk} · HP {unit.hp}/{unit.maxHp} · {unit.canAttack&&unit.stance==='attack'?'공격 가능':unit.stance==='defense'?'수비':'대기'}</small>
-          </button>:<button type="button" className={`arena-empty-slot ${canDeploy||canRetreat?'arena-target':''}`}
+            <small>ATK {unit.atk} · HP {unit.hp}/{unit.maxHp} · {unit.stunnedTurns?'봉쇄 '+unit.stunnedTurns:unit.canAttack&&unit.stance==='attack'?'공격 가능':unit.stance==='defense'?'수비':'대기'}
+              {unit.taunt&&i===1&&unit.guardSide!==undefined?' · '+laneNames[unit.guardSide]+' 보호':''}
+            </small>
+          </button>:<button type="button"
+            className={['arena-empty-slot',canDeploy||canRetreat?'arena-target':''].join(' ')}
             disabled={!canDeploy&&!canRetreat}
             onClick={()=>canRetreat?onPlace(-i-1):onPlace(i)}>
-            {canRetreat?'↪ 이 전선으로 퇴각':canDeploy?(targetSpell?'✧ 여기에 마법 사용':'✦ 여기에 소환'):'비어 있음'}
+            {canRetreat?'↪ 이 전선으로 퇴각':
+              canDeploy?(targetSpell?'✧ 마법 사용':'✦ 유닛 소환'):'비어 있음'}
           </button>}
+          <span className="arena-magic-slot" title="정식 지속·장착마법은 아직 미구현">
+            ✧ 마법 존 · {wall===0?'폐쇄':installed?installed.name:'빈 슬롯 (구현 예정)'}
+          </span>
         </div>;
       })}
     </div>
