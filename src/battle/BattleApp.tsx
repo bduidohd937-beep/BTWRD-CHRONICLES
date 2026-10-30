@@ -239,7 +239,7 @@ export default function BattleApp({battle,setBattle}:{
     </div>}
     <div className="combat-hand-header">
       <strong>🃏 {player.name} 손패 <small>{player.hand.length}장</small></strong>
-      {actingCard?.type==='유닛'&&actingCard.text.includes('도발')&&<div className="combat-stance-choice">
+      {(actingCard?.type==='유닛'&&actingCard.text.includes('도발')||actingCard?.id==='S002')&&<div className="combat-stance-choice">
         <span>중앙 도발 보호</span>
         <button aria-pressed={guardSide===0} className={guardSide===0?'active':''} onClick={()=>setGuardSide(0)}>← 좌측</button>
         <button aria-pressed={guardSide===2} className={guardSide===2?'active':''} onClick={()=>setGuardSide(2)}>우측 →</button>
