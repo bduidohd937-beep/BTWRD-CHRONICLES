@@ -1,0 +1,53 @@
+import type { ChronicleCard, RarityDefinition, Rarity } from "./foundationTypes";
+
+/** V0.1 values retained exactly. Some rates and card stats are still design-review values. */
+export const CFG = {
+  startGem: 5000,
+  single: 100,
+  multi: 1000,
+  multiCount: 11,
+  bonusMinRarity: "영웅" as Rarity,
+  saveKey: "btwrd_cardgame_v01",
+} as const;
+
+export const RARITIES: RarityDefinition[] = [
+  { name: "일반", rate: 39, refund: 10, color: "#a9afbd" },
+  { name: "희귀", rate: 35, refund: 30, color: "#4aa3ff" },
+  { name: "영웅", rate: 22.34, refund: 100, color: "#b86bff" },
+  { name: "전설", rate: 2.8, refund: 300, color: "#ffb21e" },
+  { name: "신화", rate: 0.75, refund: 800, color: "#ff4d6d" },
+  { name: "초월", rate: 0.11, refund: 2000, color: "#3ff2e0" },
+  { name: "???", rate: 0, refund: 5000, color: "#ffffff" },
+];
+
+/** Exact set of original 24 cards. temp true means not confirmed in the design bible. */
+export const CARDS: ChronicleCard[] = [
+  { id:"U001", name:"왕국 병사", rarity:"일반", type:"유닛", cost:1, atk:2, hp:1, text:"효과 없음" },
+  { id:"U002", name:"철갑 방패병", rarity:"일반", type:"유닛", cost:2, atk:1, hp:4, text:"도발" },
+  { id:"U003", name:"왕국 궁수", rarity:"일반", type:"유닛", cost:3, atk:3, hp:2, text:"소환 시 적 유닛 하나에 피해 1" },
+  { id:"U004", name:"왕국 사제", rarity:"일반", type:"유닛", cost:3, atk:1, hp:3, text:"소환 시 아군 하나의 체력 2 회복" },
+  { id:"S001", name:"치유의 빛", rarity:"일반", type:"마법", cost:2, text:"아군 유닛 하나의 체력 3 회복" },
+  { id:"S002", name:"방패 진형", rarity:"일반", type:"마법", cost:2, text:"아군 유닛 하나에게 도발과 체력 +2 부여" },
+  { id:"S003", name:"소우주 붕괴", rarity:"희귀", type:"마법", cost:5, text:"적 유닛 전체에 피해 2" },
+  { id:"L001", name:"백철의 기사 아서왕", rarity:"전설", type:"유닛", cost:6, atk:4, hp:8, text:"도발. 처음 받는 피해 2 감소" },
+  { id:"M001", name:"성해의 항해자 세렌티아", rarity:"신화", type:"유닛", cost:7, atk:3, hp:6, text:"소환 시 적 유닛 하나를 다음 턴까지 행동 불가" },
+  { id:"U005", name:"견습 창병", rarity:"일반", type:"유닛", cost:2, atk:2, hp:2, text:"효과 없음", temp:true },
+  { id:"U006", name:"정찰병", rarity:"일반", type:"유닛", cost:1, atk:1, hp:2, text:"소환 시 카드 1장 뽑기", temp:true },
+  { id:"R001", name:"왕국 기병", rarity:"희귀", type:"유닛", cost:4, atk:4, hp:3, text:"소환 턴에 공격 가능", temp:true },
+  { id:"R002", name:"성벽 수호자", rarity:"희귀", type:"유닛", cost:4, atk:2, hp:6, text:"도발", temp:true },
+  { id:"R003", name:"연막 사제", rarity:"희귀", type:"유닛", cost:3, atk:2, hp:3, text:"소환 시 아군 전체 체력 1 회복", temp:true },
+  { id:"R004", name:"전장의 함성", rarity:"희귀", type:"마법", cost:3, text:"아군 유닛 전체 공격력 +1 (이번 턴)", temp:true },
+  { id:"H001", name:"성기사 단장", rarity:"영웅", type:"유닛", cost:5, atk:4, hp:5, text:"도발. 소환 시 아군 하나의 체력 3 회복", temp:true },
+  { id:"H002", name:"왕국 저격수", rarity:"영웅", type:"유닛", cost:5, atk:5, hp:3, text:"소환 시 적 유닛 하나에 피해 3", temp:true },
+  { id:"H003", name:"전술 참모", rarity:"영웅", type:"유닛", cost:4, atk:2, hp:4, text:"소환 시 카드 2장 뽑기", temp:true },
+  { id:"H004", name:"정화의 종소리", rarity:"영웅", type:"마법", cost:4, text:"아군 유닛 하나의 체력을 최대로 회복", temp:true },
+  { id:"H005", name:"왕실 근위대장", rarity:"영웅", type:"유닛", cost:6, atk:5, hp:6, text:"아군 유닛이 공격받을 때 피해 1 감소", temp:true },
+  { id:"L002", name:"왕국의 대원수", rarity:"전설", type:"유닛", cost:7, atk:6, hp:7, text:"아군 전체 공격력 +1", temp:true },
+  { id:"L003", name:"흑철의 처형자", rarity:"전설", type:"유닛", cost:6, atk:7, hp:4, text:"유닛을 처치하면 즉시 한 번 더 공격", temp:true },
+  { id:"M002", name:"황혼의 사제 아벨리스", rarity:"신화", type:"유닛", cost:7, atk:2, hp:7, text:"턴 종료 시 아군 전체 체력 2 회복, 상태이상 정화", temp:true },
+  { id:"T001", name:"불변의 에이온", rarity:"초월", type:"유닛", cost:9, atk:5, hp:10, text:"적 유닛은 매 턴 하나만 행동 가능. 아군 전체 보호", temp:true },
+];
+
+export const rarityIndex = (name: Rarity) => RARITIES.findIndex(r => r.name === name);
+export const rarityOf = (name: Rarity) => RARITIES.find(r => r.name === name)!;
+export const CARD_MAP = new Map(CARDS.map(card => [card.id, card]));
