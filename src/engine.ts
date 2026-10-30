@@ -135,36 +135,44 @@ export function changeStance(state:BattleState,lane:number):BattleState{
   return next;
 }
 
-export function attackUnit(state:BattleState,lane:number,unitIndex:number,targetUnitIndex:number|null):BattleState {
-  if(!canAct(state)||!isLane(lane))return state;
-  const attacker=state.players[state.active];
-  const defender=state.players[1-state.active];
-  const unit=attacker.lanes[lane][unitIndex];
-  if(!unit||!unit.canAttack||unit.stance==='defense')return state;
-  // One occupied enemy unit slot blocks a direct wall strike. No adjacent siege yet.
-  if(targetUnitIndex===null){
-    if(defender.walls[lane]===0||defender.lanes[lane].length>0)return state;
-  }else if(targetUnitIndex!==0||!defender.lanes[lane][targetUnitIndex])return state;
+
+export function attackUnit(
+  state:BattleState,lane:number,unitIndex:number,targetUnitIndex:number|null,targetLane=lane,
+):BattleState{
+  if(!canAct(state)||!isLane(lane)||!isLane(targetLane))return state;
+  const targets=legalAttackTargets(state,lane,unitIndex);
+  const canAttackUnit=targetUnitIndex===0&&targets.unitLanes.includes(targetLane);
+  const canAttackWall=targetUnitIndex===null&&targets.wallLane===targetLane;
+  if(!canAttackUnit&&!canAttackWall)return state;
   const next=structuredClone(state);
-  const a=next.players[next.active],d=next.players[1-next.active];
-  const source=a.lanes[lane][unitIndex];
-  source.canAttack=false;
+  const own=next.players[next.active],enemy=next.players[1-next.active];
+  const attacker=own.lanes[lane][unitIndex];
+  attacker.canAttack=false;
   if(targetUnitIndex!==null){
-    const target=d.lanes[lane][targetUnitIndex];
-    const damage=target.stance==='defense'?Math.ceil(source.atk/2):source.atk;
-    target.hp-=damage;
-    if(target.stance==='attack')source.hp-=target.atk;
-    next.log.unshift(`${a.name}: ${source.name} → ${target.name} (${damage} 피해)`);
+    const victim=enemy.lanes[targetLane][targetUnitIndex];
+    const damage=victim.stance==='defense'?Math.ceil(attacker.atk/2):attacker.atk;
+    victim.hp-=damage;
+    if(victim.stance==='attack')attacker.hp-=victim.atk;
+    next.log.unshift(own.name+': '+attacker.name+' → '+victim.name+' ('+damage+' 피해'+(targetLane!==lane?', 인접 도발':'')+')');
     clearDead(next);
   }else{
-    d.walls[lane]=Math.max(0,d.walls[lane]-source.atk);
-    next.log.unshift(`${a.name}: ${WALL_NAMES[lane]} 성벽에 ${source.atk} 피해`);
-    if(d.walls.every(w=>w===0)){
-      next.winner=a.name;
-      next.log.unshift(`${a.name} 세 성벽 붕괴 승리!`);
-    }else if(d.walls[lane]===0&&d.lanes[lane].length>0){
-      next.pendingRetreat={owner:1-next.active,from:lane};
-      next.log.unshift(`${d.name}: ${WALL_NAMES[lane]} 성벽 붕괴 — 유닛 긴급 퇴각 선택`);
+    enemy.walls[targetLane]=Math.max(0,enemy.walls[targetLane]-attacker.atk);
+    next.log.unshift(own.name+': '+WALL_NAMES[targetLane]+' 성벽에 '+attacker.atk+' 피해');
+    if(enemy.walls.every(w=>w===0)){
+      next.winner=own.name;
+      next.log.unshift(own.name+' 세 성벽 붕괴 승리!');
+    }else if(enemy.walls[targetLane]===0){
+      const installed=enemy.spellZones[targetLane];
+      if(installed){
+        const original=cardById(installed.cardId);
+        if(original)enemy.grave.push({...original});
+        enemy.spellZones[targetLane]=null;
+        next.log.unshift(enemy.name+': 붕괴 전선 설치 마법 묘지 이동 (파괴 아님)');
+      }
+      if(enemy.lanes[targetLane].length>0){
+        next.pendingRetreat={owner:1-next.active,from:targetLane};
+        next.log.unshift(enemy.name+': 긴급 퇴각 전선 선택');
+      }
     }
   }
   return next;
